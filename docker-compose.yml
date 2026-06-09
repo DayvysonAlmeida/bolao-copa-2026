@@ -1,0 +1,25 @@
+services:
+  db:
+    image: mysql:8.0
+    volumes:
+      - ./data/db:/var/lib/mysql
+    environment:
+      - MYSQL_DATABASE=bolao_db
+      - MYSQL_USER=admin
+      - MYSQL_PASSWORD=admin
+      - MYSQL_ROOT_PASSWORD=root_admin
+    ports:
+      - "3307:3306"
+
+  backend:
+    build: ./backend
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - ./backend:/app
+    ports:
+      - "8000:8000"
+    environment:
+      # Nova URL apontando para o MySQL na porta 3306
+      - DATABASE_URL=mysql://admin:admin@db:3306/bolao_db
+    depends_on:
+      - db

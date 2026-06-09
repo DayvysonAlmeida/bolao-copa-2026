@@ -1,0 +1,20 @@
+# Dependências do Frontend (Node)
+frontend/node_modules/
+frontend/dist/
+frontend/.eslintcache
+
+# Dependências do Backend (Python)
+**/__pycache__/
+**/*.pyc
+backend/venv/
+backend/env/
+
+# Segurança e Banco de Dados Local
+.env
+*.sqlite3
+
+# Arquivos de Sistema Operacional
+.DS_Store
+Thumbs.db
+
+/data
