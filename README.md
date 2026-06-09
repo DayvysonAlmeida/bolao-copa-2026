@@ -11,7 +11,7 @@ Uma plataforma completa de bolão para a Copa do Mundo de 2026, projetada com um
 
 ## 🚀 Funcionalidades
 
-* **Sincronização Automática:** Motor de integração no backend capaz de ler e popular o banco de dados via JSON com todas as 48 seleções e os 72 jogos da fase de grupos oficiais da Copa de 2026.
+* **Sincronização Automática:** Motor de integração no backend capaz de ler e popular o banco de dados via JSON. ⚠️ **Atenção:** Os dados populados referem-se *exclusivamente à Primeira Fase (Fase de Grupos)* do campeonato, contendo as 48 seleções e seus respectivos 72 confrontos iniciais.
 * **Autenticação Segura:** Sistema de login validado por tokens JWT (JSON Web Tokens). O acesso e envio de palpites são restritos a usuários autenticados.
 * **Dashboard Dinâmico:** Visualização completa da tabela de jogos separados por grupos (A ao L), além do placar de partidas finalizadas e horários.
 * **Ranking em Tempo Real:** Tabela de classificação interativa que atualiza a pontuação dos usuários com destaques em ouro, prata e bronze para o Top 3.
@@ -54,7 +54,7 @@ Bash
 # Rode as migrações do Django
 docker-compose exec backend python manage.py migrate
 
-# Sincronize os dados da Copa de 2026 (Times e Partidas)
+# Sincronize os dados da Copa de 2026 (Times e Partidas da Primeira Fase)
 docker-compose exec backend python manage.py sync_copa
 
 # Crie um superusuário para acessar o painel Admin e fazer os primeiros palpites
