@@ -37,14 +37,14 @@ Uma plataforma completa de bolão para a Copa do Mundo de 2026, projetada com um
 
 ## ⚙️ Como Executar o Projeto Localmente
 
-Certifique-se de ter o **Docker** e o **Git** instalados na sua máquina.
+Certifique-se de ter o **Docker**, o **Git** e o **Node.js** instalados na sua máquina.
 
 **1. Clone o repositório**
 ```bash
 git clone [https://github.com/SeuUsuario/bolao-copa-2026.git](https://github.com/SeuUsuario/bolao-copa-2026.git)
 cd bolao-copa-2026
 
-2. Suba a infraestrutura com o Docker
+2. Suba a infraestrutura com o Docker (Backend e Banco de Dados)
 
 Bash
 docker-compose up --build -d
@@ -59,7 +59,14 @@ docker-compose exec backend python manage.py sync_copa
 
 # Crie um superusuário para acessar o painel Admin e fazer os primeiros palpites
 docker-compose exec backend python manage.py createsuperuser
-4. Acesse a Aplicação
+4. Prepare e inicie o Frontend (React)
+Em um novo terminal, acesse a pasta do frontend, instale as dependências e inicie o servidor local:
+
+Bash
+cd frontend
+npm install
+npm run dev
+5. Acesse a Aplicação
 
 Frontend (React): http://localhost:5173
 
