@@ -9,6 +9,7 @@ function App() {
   // Estados de Dados
   const [matches, setMatches] = useState([])
   const [ranking, setRanking] = useState([])
+  const [isLoading, setIsLoading] = useState(true)
 
   // Estados do Modal de Palpite
   const [selectedMatch, setSelectedMatch] = useState(null)
@@ -40,10 +41,17 @@ function App() {
 
   // Busca os Jogos (Roda 1 vez quando o app abre)
   useEffect(() => {
+    setIsLoading(true)
     fetch(`${API_URL}/matches/`)
       .then(response => response.json())
-      .then(data => setMatches(data))
-      .catch(error => console.error("Erro ao buscar jogos:", error))
+      .then(data => {
+        setMatches(data)
+        setIsLoading(false)
+      })
+      .catch(error => {
+        console.error("Erro ao buscar jogos:", error)
+        setIsLoading(false)
+      })
   }, [])
 
   // Busca o Ranking sempre que a aba de Ranking for clicada
@@ -395,7 +403,15 @@ function App() {
       </nav>
 
       {/* ================= ABA: JOGOS ================= */}
-      {activeTab === 'matches' && (
+      {isLoading && activeTab === 'matches' && (
+        <div className="flex flex-col items-center justify-center py-20 animate-pulse">
+          <div className="w-12 h-12 border-4 border-dark-700 border-t-neon-green rounded-full animate-spin mb-4"></div>
+          <h3 className="text-xl font-bold text-white mb-2">Acordando o servidor...</h3>
+          <p className="text-gray-400 text-sm max-w-md text-center">Como estamos em um servidor gratuito, o primeiro carregamento pode levar até 50 segundos. Obrigado pela paciência! ⚽</p>
+        </div>
+      )}
+
+      {!isLoading && activeTab === 'matches' && (
         <main className="max-w-6xl mx-auto flex flex-col gap-10 animate-fadeIn">
           {sortedGroups.map(groupName => (
             <section key={groupName}>
