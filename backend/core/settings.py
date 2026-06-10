@@ -51,7 +51,7 @@ INSTALLED_APPS = [
     'apps.bets',
 ]
 
-MIDDLEWARE = [
+MIDDLEWARE = [              
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware', # Middleware para arquivos estáticos no Render
     'corsheaders.middleware.CorsMiddleware',
