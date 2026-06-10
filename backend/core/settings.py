@@ -162,9 +162,12 @@ STORAGES = {
 CORS_ALLOW_ALL_ORIGINS = DEBUG
 
 # Para a produção, pegamos a URL do Vercel via variável de ambiente no Render
-FRONTEND_URL = os.environ.get('FRONTEND_URL')
-if FRONTEND_URL:
-    CORS_ALLOWED_ORIGINS = [FRONTEND_URL]
+FRONTEND_URL = os.environ.get('FRONTEND_URL', '')
+if FRONTEND_URL == '*':
+    CORS_ALLOW_ALL_ORIGINS = True
+elif FRONTEND_URL:
+    # Permite múltiplas URLs separadas por vírgula e remove barras (/) acidentais no final
+    CORS_ALLOWED_ORIGINS = [url.strip().rstrip('/') for url in FRONTEND_URL.split(',')]
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
