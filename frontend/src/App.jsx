@@ -721,7 +721,7 @@ function App() {
                   type="text"
                   value={regUsername}
                   onChange={(e) => setRegUsername(e.target.value)}
-                  placeholder="Ex: joao_silva"
+                  placeholder="Ex: joao.silva"
                   className="w-full rounded-xl border border-dark-700 bg-dark-900 px-4 py-3 text-white focus:border-neon-green focus:outline-none"
                 />
               </div>
