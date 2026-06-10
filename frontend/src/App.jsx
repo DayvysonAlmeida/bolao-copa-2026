@@ -1,6 +1,9 @@
 import { useState, useEffect } from 'react'
 
 function App() {
+  // Define a URL da API (Puxa do Vercel em produção, ou usa Localhost no dev)
+  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api'
+
   // Estados de Navegação
 
   // Estados de Dados
@@ -32,7 +35,7 @@ function App() {
 
   // Busca os Jogos (Roda 1 vez quando o app abre)
   useEffect(() => {
-    fetch('http://localhost:8000/api/matches/')
+    fetch(`${API_URL}/matches/`)
       .then(response => response.json())
       .then(data => setMatches(data))
       .catch(error => console.error("Erro ao buscar jogos:", error))
@@ -41,7 +44,7 @@ function App() {
   // Busca o Ranking sempre que a aba de Ranking for clicada
   useEffect(() => {
     if (activeTab === 'ranking') {
-      fetch('http://localhost:8000/api/ranking/')
+      fetch(`${API_URL}/ranking/`)
         .then(response => response.json())
         .then(data => setRanking(data))
         .catch(error => console.error("Erro ao buscar ranking:", error))
@@ -96,7 +99,7 @@ function App() {
 
   const fetchUserBets = async (token) => {
     try {
-      const response = await fetch('http://localhost:8000/api/my-bets/', {
+      const response = await fetch(`${API_URL}/my-bets/`, {
         headers: {
           'Content-Type': 'application/json',
           ...(token ? { Authorization: `Bearer ${token}` } : {})
@@ -137,7 +140,7 @@ function App() {
     }
 
     try {
-      const response = await fetch('http://localhost:8000/api/token/', {
+      const response = await fetch(`${API_URL}/token/`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username: usernameInput, password: passwordInput })
@@ -198,7 +201,7 @@ function App() {
       ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {})
     }
 
-    const url = editingBetId ? `http://localhost:8000/api/bets/${editingBetId}/` : 'http://localhost:8000/api/bets/'
+    const url = editingBetId ? `${API_URL}/bets/${editingBetId}/` : `${API_URL}/bets/`
     const method = editingBetId ? 'PUT' : 'POST'
 
     if (!isBeforeBetChangeDeadline) {
