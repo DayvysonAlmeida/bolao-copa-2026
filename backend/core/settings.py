@@ -96,9 +96,14 @@ DATABASES = {
 # Se estivermos usando MySQL (como no Aiven) via variável de ambiente
 db_url = os.environ.get('DATABASE_URL')
 if db_url and db_url.startswith('mysql'):
-    # Aiven MySQL requer SSL, mas o pymysql precisa do dicionário 'OPTIONS'
+    import ssl
+    ctx = ssl.create_default_context()
+    ctx.check_hostname = False
+    ctx.verify_mode = ssl.CERT_NONE
+
+    # Aiven MySQL requer SSL. Para evitar erros de certificado no Render sem o arquivo ca.pem:
     DATABASES['default']['OPTIONS'] = {
-        'ssl': {'ca': ''} # Diz ao pymysql para usar SSL, confiando no certificado fornecido
+        'ssl': ctx
     }
     # Removemos o ssl-mode problemático do dicionário caso o dj_database_url o tenha adicionado
     if 'ssl-mode' in DATABASES['default'].get('OPTIONS', {}):
@@ -153,8 +158,13 @@ STORAGES = {
     },
 }
 
-# Permite requisições de qualquer origem, ótimo para quando o Vercel entrar
-CORS_ALLOW_ALL_ORIGINS = True
+# Configuração de CORS: Permite tudo em ambiente local (DEBUG=True), restringe na Produção
+CORS_ALLOW_ALL_ORIGINS = DEBUG
+
+# Para a produção, pegamos a URL do Vercel via variável de ambiente no Render
+FRONTEND_URL = os.environ.get('FRONTEND_URL')
+if FRONTEND_URL:
+    CORS_ALLOWED_ORIGINS = [FRONTEND_URL]
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
