@@ -41,7 +41,7 @@ Certifique-se de ter o **Docker**, o **Git** e o **Node.js** instalados na sua m
 
 **1. Clone o repositório**
 ```bash
-git clone [https://github.com/SeuUsuario/bolao-copa-2026.git](https://github.com/SeuUsuario/bolao-copa-2026.git)
+git clone https://github.com/SeuUsuario/bolao-copa-2026.git
 cd bolao-copa-2026
 
 2. Suba a infraestrutura com o Docker (Backend e Banco de Dados)
