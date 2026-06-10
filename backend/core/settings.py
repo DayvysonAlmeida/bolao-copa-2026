@@ -93,6 +93,19 @@ DATABASES = {
     )
 }
 
+# Se estivermos usando MySQL (como no Aiven) via variável de ambiente
+db_url = os.environ.get('DATABASE_URL')
+if db_url and db_url.startswith('mysql'):
+    # Aiven MySQL requer SSL, mas o pymysql precisa do dicionário 'OPTIONS'
+    DATABASES['default']['OPTIONS'] = {
+        'ssl': {'ca': ''} # Diz ao pymysql para usar SSL, confiando no certificado fornecido
+    }
+    # Removemos o ssl-mode problemático do dicionário caso o dj_database_url o tenha adicionado
+    if 'ssl-mode' in DATABASES['default'].get('OPTIONS', {}):
+        del DATABASES['default']['OPTIONS']['ssl-mode']
+    if 'ssl-mode' in DATABASES['default']:
+        del DATABASES['default']['ssl-mode']
+
 # Configuração para usar o PyMySQL se for MySQL
 import pymysql
 pymysql.install_as_MySQLdb()
