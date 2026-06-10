@@ -14,21 +14,25 @@ from pathlib import Path
 import os
 import dj_database_url
 from datetime import timedelta
+from dotenv import load_dotenv
+
+# Carrega as variáveis de ambiente do arquivo .env (se existir localmente)
+load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
 # Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
-
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-42dy5x5*8$(lede2&5lu4-5_+^#-p7xj&rne)x)rc8m7u(!*2z'
+SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-42dy5x5*8$(lede2&5lu4-5_+^#-p7xj&rne)x)rc8m7u(!*2z')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+# Se DEBUG for True na variável, ele ativa. Caso contrário, False (seguro para produção).
+DEBUG = os.environ.get('DEBUG', 'False').lower() == 'true'
 
-ALLOWED_HOSTS = []
+# Permite todos os hosts por padrão em desenvolvimento, e pega do Render na produção
+ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '*').split(',')
 
 
 # Application definition
@@ -39,6 +43,7 @@ INSTALLED_APPS = [
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
+    'whitenoise.runserver_nostatic', # Ajuda os estáticos em dev
     'django.contrib.staticfiles',
     'rest_framework',
     'corsheaders',
@@ -48,6 +53,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware', # Middleware para arquivos estáticos no Render
     'corsheaders.middleware.CorsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -78,15 +84,18 @@ WSGI_APPLICATION = 'core.wsgi.application'
 
 
 # Database
-# https://docs.djangoproject.com/en/6.0/ref/settings/#databases
-
-# Substitua a configuração antiga por esta:
+# Em produção (Render), usa a DATABASE_URL. Local, usa sqlite3.
 DATABASES = {
     'default': dj_database_url.config(
         default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}",
-        conn_max_age=600
+        conn_max_age=600,
+        conn_health_checks=True,
     )
 }
+
+# Configuração para usar o PyMySQL se for MySQL
+import pymysql
+pymysql.install_as_MySQLdb()
 
 
 # Password validation
@@ -121,14 +130,18 @@ USE_TZ = True
 
 
 # Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/6.0/howto/static-files/
-
 STATIC_URL = 'static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'
 
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5173",
-    "http://127.0.0.1:5173",
-]
+# Compressão e cache de arquivos estáticos no Render
+STORAGES = {
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+    },
+}
+
+# Permite requisições de qualquer origem, ótimo para quando o Vercel entrar
+CORS_ALLOW_ALL_ORIGINS = True
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
