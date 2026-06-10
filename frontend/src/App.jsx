@@ -24,6 +24,11 @@ function App() {
   const [refreshToken, setRefreshToken] = useState('')
   const [loggedUser, setLoggedUser] = useState(null)
   const [showLoginModal, setShowLoginModal] = useState(false)
+  const [showRegisterModal, setShowRegisterModal] = useState(false)
+  const [regUsername, setRegUsername] = useState('')
+  const [regPassword, setRegPassword] = useState('')
+  const [regConfirmPassword, setRegConfirmPassword] = useState('')
+  const [registerError, setRegisterError] = useState('')
   const [userBets, setUserBets] = useState([])
   const [editingBetId, setEditingBetId] = useState(null)
   const [activeTab, setActiveTab] = useState('matches') // 'matches', 'ranking' ou 'my-bets'
@@ -171,6 +176,63 @@ function App() {
     }
   }
 
+  const handleRegisterSubmit = async (e) => {
+    e.preventDefault()
+    if (!regUsername || !regPassword || !regConfirmPassword) {
+      setRegisterError('Preencha todos os campos.')
+      return
+    }
+    if (regPassword !== regConfirmPassword) {
+      setRegisterError('As senhas não coincidem.')
+      return
+    }
+
+    try {
+      const response = await fetch(`${API_URL}/register/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: regUsername, password: regPassword })
+      })
+
+      const data = await response.json()
+      if (!response.ok) {
+        setRegisterError(data.error || 'Erro ao criar conta.')
+        return
+      }
+
+      // Conta criada com sucesso! Já fazemos o login automático do usuário para facilitar
+      const loginResponse = await fetch(`${API_URL}/token/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: regUsername, password: regPassword })
+      })
+      
+      if (loginResponse.ok) {
+        const loginData = await loginResponse.json()
+        const payload = parseJwt(loginData.access)
+        const userId = payload?.user_id ?? null
+        
+        setAccessToken(loginData.access)
+        setRefreshToken(loginData.refresh)
+        setLoggedUser({ id: userId, username: regUsername })
+        
+        setShowRegisterModal(false)
+        setRegisterError('')
+        setRegUsername('')
+        setRegPassword('')
+        setRegConfirmPassword('')
+        setStatusMessage({ type: 'success', text: 'Conta criada com sucesso! Você já está logado.' })
+        
+        if (userId) {
+          await fetchUserBets(loginData.access)
+        }
+      }
+    } catch (error) {
+      console.error('Erro no cadastro:', error)
+      setRegisterError('Erro de conexão ao tentar cadastrar.')
+    }
+  }
+
   const handleLogout = () => {
     setAccessToken('')
     setRefreshToken('')
@@ -266,7 +328,10 @@ function App() {
             ) : (
               <div className="flex flex-col sm:items-end gap-2">
                 <span className="text-sm text-gray-500">Clique em um jogo para entrar e palpitar.</span>
-                <button onClick={() => { setSelectedMatch(null); setShowLoginModal(true); }} className="rounded-full bg-neon-green px-4 py-2 text-dark-900 font-semibold hover:bg-opacity-90 transition-all">Login</button>
+                <div className="flex gap-2">
+                  <button onClick={() => { setSelectedMatch(null); setShowRegisterModal(true); }} className="rounded-full bg-dark-700 border border-dark-600 px-4 py-2 text-white font-semibold hover:bg-dark-600 transition-all">Criar Conta</button>
+                  <button onClick={() => { setSelectedMatch(null); setShowLoginModal(true); }} className="rounded-full bg-neon-green px-4 py-2 text-dark-900 font-semibold hover:bg-opacity-90 transition-all">Login</button>
+                </div>
               </div>
             )}
           </div>
@@ -500,7 +565,10 @@ function App() {
                 <p className="text-sm text-gray-400">Jogos nos quais você já enviou um palpite.</p>
               </div>
               {!loggedUser && (
-                <button onClick={() => setShowLoginModal(true)} className="rounded-full bg-neon-green px-4 py-2 text-dark-900 font-semibold hover:bg-opacity-90 transition-all">Login</button>
+                <div className="flex gap-2">
+                  <button onClick={() => setShowRegisterModal(true)} className="rounded-full bg-dark-700 border border-dark-600 px-4 py-2 text-white font-semibold hover:bg-dark-600 transition-all hidden sm:block">Criar Conta</button>
+                  <button onClick={() => setShowLoginModal(true)} className="rounded-full bg-neon-green px-4 py-2 text-dark-900 font-semibold hover:bg-opacity-90 transition-all">Login</button>
+                </div>
               )}
             </div>
 
@@ -611,6 +679,64 @@ function App() {
               <div className="flex gap-3">
                 <button type="button" onClick={() => { setShowLoginModal(false); setSelectedMatch(null); }} className="flex-1 bg-dark-700 hover:bg-dark-600 text-white font-semibold py-3 rounded-xl transition-all">Cancelar</button>
                 <button type="submit" className="flex-1 bg-neon-green hover:bg-opacity-90 text-dark-900 font-bold py-3 rounded-xl transition-all shadow-lg shadow-neon-green/20">Entrar</button>
+              </div>
+              <div className="text-center mt-4">
+                <span className="text-sm text-gray-400">Não tem conta? </span>
+                <button type="button" onClick={() => { setShowLoginModal(false); setShowRegisterModal(true); }} className="text-sm text-neon-green font-semibold hover:underline">Cadastre-se</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ================= MODAL DE CADASTRO ================= */}
+      {showRegisterModal && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fadeIn">
+          <div className="bg-dark-800 border border-dark-700 w-full max-w-md rounded-2xl p-6 shadow-2xl relative">
+            <button onClick={() => { setShowRegisterModal(false); setSelectedMatch(null); }} className="absolute top-4 right-4 text-gray-400 hover:text-white text-xl">✕</button>
+            <h3 className="text-center text-gray-400 text-xs font-mono uppercase tracking-wider mb-2">
+              Criar nova conta
+            </h3>
+            <p className="text-center text-sm text-gray-400 mb-4">Crie sua conta para participar do bolão.</p>
+            <form onSubmit={handleRegisterSubmit} className="space-y-4">
+              <div>
+                <label className="block text-sm text-gray-300 mb-2">Usuário</label>
+                <input
+                  type="text"
+                  value={regUsername}
+                  onChange={(e) => setRegUsername(e.target.value)}
+                  placeholder="Ex: joao_silva"
+                  className="w-full rounded-xl border border-dark-700 bg-dark-900 px-4 py-3 text-white focus:border-neon-green focus:outline-none"
+                />
+              </div>
+              <div>
+                <label className="block text-sm text-gray-300 mb-2">Senha</label>
+                <input
+                  type="password"
+                  value={regPassword}
+                  onChange={(e) => setRegPassword(e.target.value)}
+                  className="w-full rounded-xl border border-dark-700 bg-dark-900 px-4 py-3 text-white focus:border-neon-green focus:outline-none"
+                />
+              </div>
+              <div>
+                <label className="block text-sm text-gray-300 mb-2">Confirmar Senha</label>
+                <input
+                  type="password"
+                  value={regConfirmPassword}
+                  onChange={(e) => setRegConfirmPassword(e.target.value)}
+                  className="w-full rounded-xl border border-dark-700 bg-dark-900 px-4 py-3 text-white focus:border-neon-green focus:outline-none"
+                />
+              </div>
+              {registerError && (
+                <div className="text-sm text-red-400 bg-red-950 border border-red-900 rounded-xl p-3">{registerError}</div>
+              )}
+              <div className="flex gap-3">
+                <button type="button" onClick={() => { setShowRegisterModal(false); setSelectedMatch(null); }} className="flex-1 bg-dark-700 hover:bg-dark-600 text-white font-semibold py-3 rounded-xl transition-all">Cancelar</button>
+                <button type="submit" className="flex-1 bg-neon-green hover:bg-opacity-90 text-dark-900 font-bold py-3 rounded-xl transition-all shadow-lg shadow-neon-green/20">Cadastrar</button>
+              </div>
+              <div className="text-center mt-4">
+                <span className="text-sm text-gray-400">Já tem conta? </span>
+                <button type="button" onClick={() => { setShowRegisterModal(false); setShowLoginModal(true); }} className="text-sm text-neon-green font-semibold hover:underline">Faça login</button>
               </div>
             </form>
           </div>
