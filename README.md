@@ -1,80 +1,91 @@
 # 🏆 Bolão Copa do Mundo 2026
 
 ![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)
-![Django](https://img.shields.io/badge/Django-092E20?style=for-the-badge&logo=django&logoColor=green)
-![Docker](https://img.shields.io/badge/Docker-2CA5E0?style=for-the-badge&logo=docker&logoColor=white)
+![Vite](https://img.shields.io/badge/Vite-B73BFE?style=for-the-badge&logo=vite&logoColor=FFD62E)
 ![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)
+![Django](https://img.shields.io/badge/Django-092E20?style=for-the-badge&logo=django&logoColor=green)
+![MySQL](https://img.shields.io/badge/MySQL-005C84?style=for-the-badge&logo=mysql&logoColor=white)
 
-Uma plataforma completa de bolão para a Copa do Mundo de 2026, projetada com uma arquitetura moderna dividida entre um backend robusto em Python/Django e um frontend rápido e responsivo em React. O projeto possui um design voltado para o estilo *Dark Mode* com destaques em Verde Neon, proporcionando uma excelente experiência de usuário.
+Uma plataforma completa, moderna e gamificada de bolão para a Copa do Mundo de 2026. 
+Projetada com uma arquitetura robusta dividida entre um backend em **Python/Django REST Framework** e um frontend ultrarrápido em **React + Vite**. O design utiliza a estética *Dark Mode* com destaques em Verde Neon, proporcionando uma experiência de usuário (UX) premium e imersiva.
 
 ---
 
-## 🚀 Funcionalidades
+## ✨ Principais Funcionalidades
 
-* **Sincronização Automática:** Motor de integração no backend capaz de ler e popular o banco de dados via JSON. ⚠️ **Atenção:** Os dados populados referem-se *exclusivamente à Primeira Fase (Fase de Grupos)* do campeonato, contendo as 48 seleções e seus respectivos 72 confrontos iniciais.
-* **Autenticação Segura:** Sistema de login validado por tokens JWT (JSON Web Tokens). O acesso e envio de palpites são restritos a usuários autenticados.
-* **Dashboard Dinâmico:** Visualização completa da tabela de jogos separados por grupos (A ao L), além do placar de partidas finalizadas e horários.
-* **Ranking em Tempo Real:** Tabela de classificação interativa que atualiza a pontuação dos usuários com destaques em ouro, prata e bronze para o Top 3.
-* **Infraestrutura em Contêineres:** Todo o ecossistema (banco de dados, API e frontend) roda orquestrado via Docker.
+* **Autenticação Segura (JWT):** Sistema robusto de login e cadastro com tokens JWT.
+* **Meu Perfil:** Gerenciamento de conta completo, permitindo edição de nome, sobrenome, email e alteração de senha inteligente (com interface otimizada).
+* **Navegação Dinâmica & Filtros:** Abas inteligentes na tela principal separando os jogos em "Todos", "Faltam Palpitar" e "Encerrados", para o usuário nunca perder um prazo.
+* **Feedback Visual e Gamificação:**
+  * Indicadores **"🔴 AO VIVO"** pulsantes para jogos em andamento.
+  * Pódio no Ranking com exibição de medalhas (🥇, 🥈, 🥉).
+  * Selo dourado animado **"🎯 Mitou!"** quando o usuário acerta o placar exato (5 pontos).
+* **Painel de Jogos e Grupos:** Visualização completa da tabela de jogos com suas respectivas bandeiras, organizados da fase de grupos (A ao L) até a fase final.
+* **Sincronização de Dados:** Motor pronto para alimentar o banco de dados via script JSON e preparado para receber integração com APIs de esportes no futuro.
 
 ---
 
 ## 🛠️ Tecnologias Utilizadas
 
-### Backend
-* **Python & Django REST Framework:** Criação de rotas, serialização de dados e regras de negócio.
-* **Simple JWT:** Segurança e geração de tokens de acesso.
-* **MySQL:** Banco de dados relacional.
+### Frontend (Aplicação Web)
+* **React 18** (com Vite para build ultrarrápido)
+* **Tailwind CSS** (estilização utilitária e responsiva)
+* **Context API & Custom Hooks** (para gerenciamento de estados, autenticação e rotas)
 
-### Frontend
-* **React + Vite:** Construção rápida de interfaces de usuário e gerenciamento de estado.
-* **Tailwind CSS:** Estilização utilitária aplicada diretamente no JSX para o tema *Dark/Neon*.
+### Backend (API RESTful)
+* **Python & Django** (ORM, validações e painel de administração nativo)
+* **Django REST Framework (DRF)** (Construção da API)
+* **Simple JWT** (Segurança)
 
-### Infraestrutura
-* **Docker & Docker Compose:** Padronização e isolamento do ambiente de desenvolvimento.
+### Banco de Dados & Infraestrutura
+* **MySQL** via Aiven (Produção) / SQLite (Desenvolvimento)
+* **Render** (Hospedagem do Backend em nuvem)
+* **Vercel** (Hospedagem do Frontend web)
+* **Docker & Docker Compose** (Ambiente de desenvolvimento)
 
 ---
 
-## ⚙️ Como Executar o Projeto Localmente
+## ⚙️ Como Executar Localmente
 
-Certifique-se de ter o **Docker**, o **Git** e o **Node.js** instalados na sua máquina.
+Certifique-se de ter o **Python**, **Node.js** e **Git** instalados. (Se preferir usar Docker, o arquivo docker-compose também está disponível).
 
 **1. Clone o repositório**
 ```bash
-git clone https://github.com/SeuUsuario/bolao-copa-2026.git
+git clone https://github.com/DayvysonAlmeida/bolao-copa-2026.git
 cd bolao-copa-2026
+```
 
-2. Suba a infraestrutura com o Docker (Backend e Banco de Dados)
+**2. Configure o Backend (Django)**
+```bash
+cd backend
+python -m venv venv
+# No Windows: .\venv\Scripts\activate
+# No Linux/Mac: source venv/bin/activate
 
-Bash
-docker-compose up --build -d
-3. Prepare o banco de dados (Backend)
+pip install -r requirements.txt
+python manage.py migrate
+python manage.py sync_copa  # Sincroniza os jogos do arquivo JSON
+python manage.py createsuperuser  # Cria seu usuário de admin
+python manage.py runserver
+```
 
-Bash
-# Rode as migrações do Django
-docker-compose exec backend python manage.py migrate
-
-# Sincronize os dados da Copa de 2026 (Times e Partidas da Primeira Fase)
-docker-compose exec backend python manage.py sync_copa
-
-# Crie um superusuário para acessar o painel Admin e fazer os primeiros palpites
-docker-compose exec backend python manage.py createsuperuser
-4. Prepare e inicie o Frontend (React)
-Em um novo terminal, acesse a pasta do frontend, instale as dependências e inicie o servidor local:
-
-Bash
+**3. Configure o Frontend (React)**
+Abra um novo terminal e navegue para a pasta frontend:
+```bash
 cd frontend
 npm install
 npm run dev
-5. Acesse a Aplicação
+```
 
-Frontend (React): http://localhost:5173
+**4. Acesse a Aplicação**
+* **Frontend (App):** `http://localhost:5173`
+* **Backend API:** `http://localhost:8000/api/`
+* **Admin:** `http://localhost:8000/admin/`
 
-API / Backend (Django): http://localhost:8000/api/
+---
 
-Painel Admin: http://localhost:8000/admin/
+## 👨‍💻 Desenvolvido por
 
-👨‍💻 Autor
-Dayvyson Fernando Almeida da Silva
+**Dayvyson Fernando Almeida da Silva (DayFer)** 💚
 
-Projeto construído para aprofundamento em arquitetura Full-Stack, integração de APIs e orquestração com DevOps.
+Projeto construído com paixão para aprofundamento em arquitetura Full-Stack, UX Design e deploy na nuvem.
