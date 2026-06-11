@@ -42,7 +42,6 @@ if not SECRET_KEY:
 # Permite todos os hosts por padrão em desenvolvimento, e pega do Render na produção
 ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '*').split(',')
 
-
 # Application definition
 
 INSTALLED_APPS = [

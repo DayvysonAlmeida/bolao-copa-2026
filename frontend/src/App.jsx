@@ -7,6 +7,7 @@ import { MyBetsTab } from './components/MyBetsTab';
 import { BetModal } from './components/BetModal';
 import { LoginModal } from './components/LoginModal';
 import { RegisterModal } from './components/RegisterModal';
+import { ProfileModal } from './components/ProfileModal';
 
 function App() {
   const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
@@ -15,16 +16,20 @@ function App() {
   const [ranking, setRanking] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('matches');
+  const [showProfileModal, setShowProfileModal] = useState(false);
 
   const {
     usernameInput, setUsernameInput,
     passwordInput, setPasswordInput,
     loginError, setLoginError,
     accessToken,
-    loggedUser,
+    loggedUser, setLoggedUser,
     showLoginModal, setShowLoginModal,
     showRegisterModal, setShowRegisterModal,
     regUsername, setRegUsername,
+    regFirstName, setRegFirstName,
+    regLastName, setRegLastName,
+    regEmail, setRegEmail,
     regPassword, setRegPassword,
     regConfirmPassword, setRegConfirmPassword,
     registerError, setRegisterError,
@@ -101,8 +106,9 @@ function App() {
           </div>
           <div className="flex flex-col sm:items-end gap-3">
             {loggedUser ? (
-              <div className="inline-flex items-center gap-3 rounded-full border border-dark-700 bg-dark-900 px-4 py-3 text-gray-200 shadow-sm">
-                <span className="font-semibold text-white">Olá, {loggedUser.username}</span>
+              <div className="inline-flex flex-wrap items-center gap-3 rounded-full border border-dark-700 bg-dark-900 px-4 py-3 text-gray-200 shadow-sm">
+                <span className="font-semibold text-white">Olá, {loggedUser.first_name || loggedUser.username}</span>
+                <button onClick={() => setShowProfileModal(true)} className="rounded-full bg-dark-700 px-4 py-2 text-white font-semibold hover:bg-dark-600 transition-all">Meu Perfil</button>
                 <button onClick={onLogout} className="rounded-full bg-neon-green px-4 py-2 text-dark-900 font-semibold hover:bg-opacity-90 transition-all">Sair</button>
               </div>
             ) : (
@@ -232,6 +238,12 @@ function App() {
         handleRegisterSubmit={onRegisterSubmit} 
         regUsername={regUsername} 
         setRegUsername={setRegUsername} 
+        regFirstName={regFirstName}
+        setRegFirstName={setRegFirstName}
+        regLastName={regLastName}
+        setRegLastName={setRegLastName}
+        regEmail={regEmail}
+        setRegEmail={setRegEmail}
         regPassword={regPassword} 
         setRegPassword={setRegPassword} 
         regConfirmPassword={regConfirmPassword} 
@@ -255,6 +267,15 @@ function App() {
           statusMessage={statusMessage} 
         />
       )}
+
+      <ProfileModal
+        showProfileModal={showProfileModal}
+        setShowProfileModal={setShowProfileModal}
+        loggedUser={loggedUser}
+        setLoggedUser={setLoggedUser}
+        accessToken={accessToken}
+        API_URL={API_URL}
+      />
     </div>
   );
 }

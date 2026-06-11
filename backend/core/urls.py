@@ -3,7 +3,7 @@ from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from apps.matches.views import TeamViewSet, MatchViewSet
-from apps.bets.views import BetViewSet, RankingListView, MyBetsListView, RegisterView
+from apps.bets.views import BetViewSet, RankingListView, MyBetsListView, RegisterView, UserProfileView
 
 # O Router cria automaticamente as rotas de listar e detalhar
 router = DefaultRouter()
@@ -21,6 +21,8 @@ urlpatterns = [
     
     # Rota para cadastro de novos usuários
     path('api/register/', RegisterView.as_view(), name='register'),
+    path('api/me/', UserProfileView.as_view(), name='user-profile'),
+    
     path('api/', include(router.urls)),
     path('api/my-bets/', MyBetsListView.as_view(), name='my-bets'),
     path('api/ranking/', RankingListView.as_view(), name='ranking'),

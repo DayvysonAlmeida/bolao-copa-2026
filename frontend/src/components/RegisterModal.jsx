@@ -5,6 +5,12 @@ export function RegisterModal({
   handleRegisterSubmit, 
   regUsername, 
   setRegUsername, 
+  regFirstName,
+  setRegFirstName,
+  regLastName,
+  setRegLastName,
+  regEmail,
+  setRegEmail,
   regPassword, 
   setRegPassword, 
   regConfirmPassword, 
@@ -15,14 +21,46 @@ export function RegisterModal({
   if (!showRegisterModal) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fadeIn">
-      <div className="bg-dark-800 border border-dark-700 w-full max-w-md rounded-2xl p-6 shadow-2xl relative">
+    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fadeIn overflow-y-auto">
+      <div className="bg-dark-800 border border-dark-700 w-full max-w-md rounded-2xl p-6 shadow-2xl relative my-8">
         <button onClick={() => { setShowRegisterModal(false); setSelectedMatch(null); }} className="absolute top-4 right-4 text-gray-400 hover:text-white text-xl">✕</button>
         <h3 className="text-center text-gray-400 text-xs font-mono uppercase tracking-wider mb-2">
           Criar nova conta
         </h3>
         <p className="text-center text-sm text-gray-400 mb-4">Crie sua conta para participar do bolão.</p>
         <form onSubmit={handleRegisterSubmit} className="space-y-4">
+          <div className="flex gap-4">
+            <div className="w-1/2">
+              <label className="block text-sm text-gray-300 mb-2">Nome</label>
+              <input
+                type="text"
+                value={regFirstName}
+                onChange={(e) => setRegFirstName(e.target.value)}
+                placeholder="Ex: João"
+                className="w-full rounded-xl border border-dark-700 bg-dark-900 px-4 py-3 text-white focus:border-neon-green focus:outline-none"
+              />
+            </div>
+            <div className="w-1/2">
+              <label className="block text-sm text-gray-300 mb-2">Sobrenome</label>
+              <input
+                type="text"
+                value={regLastName}
+                onChange={(e) => setRegLastName(e.target.value)}
+                placeholder="Ex: Silva"
+                className="w-full rounded-xl border border-dark-700 bg-dark-900 px-4 py-3 text-white focus:border-neon-green focus:outline-none"
+              />
+            </div>
+          </div>
+          <div>
+            <label className="block text-sm text-gray-300 mb-2">Email</label>
+            <input
+              type="email"
+              value={regEmail}
+              onChange={(e) => setRegEmail(e.target.value)}
+              placeholder="Ex: joao@email.com"
+              className="w-full rounded-xl border border-dark-700 bg-dark-900 px-4 py-3 text-white focus:border-neon-green focus:outline-none"
+            />
+          </div>
           <div>
             <label className="block text-sm text-gray-300 mb-2">Usuário</label>
             <input
