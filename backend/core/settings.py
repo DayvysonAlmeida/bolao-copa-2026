@@ -23,13 +23,21 @@ load_dotenv()
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
-# Quick-start development settings - unsuitable for production
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-42dy5x5*8$(lede2&5lu4-5_+^#-p7xj&rne)x)rc8m7u(!*2z')
+from django.core.exceptions import ImproperlyConfigured
 
 # SECURITY WARNING: don't run with debug turned on in production!
 # Se DEBUG for True na variável, ele ativa. Caso contrário, False (seguro para produção).
 DEBUG = os.environ.get('DEBUG', 'False').lower() == 'true'
+
+# SECURITY WARNING: keep the secret key used in production secret!
+SECRET_KEY = os.environ.get('SECRET_KEY')
+
+if not DEBUG and not SECRET_KEY:
+    raise ImproperlyConfigured("A variável de ambiente SECRET_KEY é obrigatória em ambiente de produção (DEBUG=False).")
+
+# Em desenvolvimento, se não houver chave no .env, usa uma insegura de fallback
+if not SECRET_KEY:
+    SECRET_KEY = 'django-insecure-dev-key-do-not-use-in-prod'
 
 # Permite todos os hosts por padrão em desenvolvimento, e pega do Render na produção
 ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '*').split(',')
