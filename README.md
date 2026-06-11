@@ -55,26 +55,22 @@ git clone https://github.com/DayvysonAlmeida/bolao-copa-2026.git
 cd bolao-copa-2026
 ```
 
-**2. Configure o Backend (Django)**
+**2. Suba o ambiente completo (Backend, Frontend e Banco de Dados)**
 ```bash
-cd backend
-python -m venv venv
-# No Windows: .\venv\Scripts\activate
-# No Linux/Mac: source venv/bin/activate
-
-pip install -r requirements.txt
-python manage.py migrate
-python manage.py sync_copa  # Sincroniza os jogos do arquivo JSON
-python manage.py createsuperuser  # Cria seu usuário de admin
-python manage.py runserver
+docker-compose up --build -d
 ```
+*Este comando único irá baixar o Node, Python e MySQL e ligar todos os serviços.*
 
-**3. Configure o Frontend (React)**
-Abra um novo terminal e navegue para a pasta frontend:
+**3. Prepare o banco de dados (Apenas na primeira execução)**
 ```bash
-cd frontend
-npm install
-npm run dev
+# Rode as migrações do Django
+docker-compose exec backend python manage.py migrate
+
+# Sincronize os dados da Copa de 2026 (Times e Partidas)
+docker-compose exec backend python manage.py sync_copa
+
+# Crie um superusuário para acessar o painel Admin
+docker-compose exec backend python manage.py createsuperuser
 ```
 
 **4. Acesse a Aplicação**
