@@ -18,7 +18,7 @@ class RankingSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ['id', 'username', 'total_points']
+        fields = ['id', 'username', 'first_name', 'last_name', 'total_points']
 
 
 class UserSerializer(serializers.ModelSerializer):

@@ -40,7 +40,7 @@ export function RankingTab({ ranking, loggedUser, userRankPosition }) {
                       {index + 1}º
                     </div>
                     <span className={`text-lg font-semibold ${isFirst ? 'text-white' : 'text-gray-300'}`}>
-                      {user.username}
+                      {user.first_name ? `${user.first_name} ${user.last_name || ''}`.trim() : user.username}
                     </span>
                   </div>
                   <div className="flex items-baseline gap-1">
