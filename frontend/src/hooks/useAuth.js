@@ -13,6 +13,9 @@ export function useAuth(API_URL, fetchUserBets) {
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [showRegisterModal, setShowRegisterModal] = useState(false);
   const [regUsername, setRegUsername] = useState('');
+  const [regFirstName, setRegFirstName] = useState('');
+  const [regLastName, setRegLastName] = useState('');
+  const [regEmail, setRegEmail] = useState('');
   const [regPassword, setRegPassword] = useState('');
   const [regConfirmPassword, setRegConfirmPassword] = useState('');
   const [registerError, setRegisterError] = useState('');
@@ -52,7 +55,18 @@ export function useAuth(API_URL, fetchUserBets) {
 
       const payload = parseJwt(data.access);
       const userId = payload?.user_id ?? null;
-      const userObj = { id: userId, username: usernameInput };
+      
+      // Busca os dados completos do perfil
+      let userObj = { id: userId, username: usernameInput };
+      try {
+        const profileRes = await fetch(`${API_URL}/me/`, {
+          headers: { 'Authorization': `Bearer ${data.access}` }
+        });
+        if (profileRes.ok) {
+          userObj = await profileRes.json();
+        }
+      } catch (e) { console.error('Erro ao buscar perfil:', e); }
+
       setAccessToken(data.access);
       setRefreshToken(data.refresh);
       setLoggedUser(userObj);
@@ -76,7 +90,7 @@ export function useAuth(API_URL, fetchUserBets) {
 
   const handleRegisterSubmit = async (e, setStatusMessage) => {
     e.preventDefault();
-    if (!regUsername || !regPassword || !regConfirmPassword) {
+    if (!regUsername || !regPassword || !regConfirmPassword || !regFirstName || !regLastName || !regEmail) {
       setRegisterError('Preencha todos os campos.');
       return;
     }
@@ -89,7 +103,13 @@ export function useAuth(API_URL, fetchUserBets) {
       const response = await fetch(`${API_URL}/register/`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username: regUsername, password: regPassword })
+        body: JSON.stringify({ 
+          username: regUsername, 
+          password: regPassword,
+          first_name: regFirstName,
+          last_name: regLastName,
+          email: regEmail
+        })
       });
 
       const data = await response.json();
@@ -110,7 +130,16 @@ export function useAuth(API_URL, fetchUserBets) {
         const payload = parseJwt(loginData.access);
         const userId = payload?.user_id ?? null;
         
-        const userObj = { id: userId, username: regUsername };
+        let userObj = { id: userId, username: regUsername };
+        try {
+          const profileRes = await fetch(`${API_URL}/me/`, {
+            headers: { 'Authorization': `Bearer ${loginData.access}` }
+          });
+          if (profileRes.ok) {
+            userObj = await profileRes.json();
+          }
+        } catch (e) { console.error('Erro ao buscar perfil:', e); }
+        
         setAccessToken(loginData.access);
         setRefreshToken(loginData.refresh);
         setLoggedUser(userObj);
@@ -122,6 +151,9 @@ export function useAuth(API_URL, fetchUserBets) {
         setShowRegisterModal(false);
         setRegisterError('');
         setRegUsername('');
+        setRegFirstName('');
+        setRegLastName('');
+        setRegEmail('');
         setRegPassword('');
         setRegConfirmPassword('');
         setStatusMessage({ type: 'success', text: 'Conta criada com sucesso! Você já está logado.' });
@@ -156,10 +188,13 @@ export function useAuth(API_URL, fetchUserBets) {
     loginError, setLoginError,
     accessToken,
     refreshToken,
-    loggedUser,
+    loggedUser, setLoggedUser,
     showLoginModal, setShowLoginModal,
     showRegisterModal, setShowRegisterModal,
     regUsername, setRegUsername,
+    regFirstName, setRegFirstName,
+    regLastName, setRegLastName,
+    regEmail, setRegEmail,
     regPassword, setRegPassword,
     regConfirmPassword, setRegConfirmPassword,
     registerError, setRegisterError,
