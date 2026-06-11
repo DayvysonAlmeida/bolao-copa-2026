@@ -32,18 +32,25 @@ export function MatchCard({ match, userBet, loggedUser, handleOpenModal, betChan
       {match.status === 'FINISHED' && userBet && (
         <div className={`absolute top-4 left-4 rounded-full text-xs font-bold px-3 py-1 border ${
           userBet.points_earned === 5 
-            ? 'bg-yellow-400/20 text-yellow-300 border-yellow-400/50' 
+            ? 'bg-yellow-400/20 text-yellow-300 border-yellow-400/50 animate-pulse shadow-[0_0_10px_rgba(250,204,21,0.5)]' 
             : userBet.points_earned === 3
               ? 'bg-neon-green/20 text-neon-green border-neon-green/50'
               : 'bg-red-400/20 text-red-300 border-red-400/50'
         }`}>
-          {userBet.points_earned === 5 ? '🎯 Na mosca!' : userBet.points_earned === 3 ? '✓ Acertou!' : '✗ Errou'}
+          {userBet.points_earned === 5 ? '🎯 Mitou!' : userBet.points_earned === 3 ? '✓ Acertou!' : '✗ Errou'}
         </div>
       )}
-      <div className="text-center mb-5">
-        <span className="text-xs font-mono text-gray-400 bg-dark-900 px-3 py-1 rounded-full group-hover:text-neon-green transition-colors">
-          {match.status === 'FINISHED' ? 'Encerrado' : `${dayMonth} às ${time}`}
-        </span>
+      <div className="text-center mb-5 flex justify-center">
+        {match.status === 'IN_PROGRESS' ? (
+          <span className="flex items-center gap-2 text-xs font-bold text-red-500 bg-red-500/10 px-3 py-1 rounded-full border border-red-500/20">
+            <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
+            AO VIVO
+          </span>
+        ) : (
+          <span className="text-xs font-mono text-gray-400 bg-dark-900 px-3 py-1 rounded-full group-hover:text-neon-green transition-colors">
+            {match.status === 'FINISHED' ? 'Encerrado' : `${dayMonth} às ${time}`}
+          </span>
+        )}
       </div>
 
       <div className="flex items-center justify-between">
@@ -66,7 +73,7 @@ export function MatchCard({ match, userBet, loggedUser, handleOpenModal, betChan
           <div>
             <span className="font-semibold text-neon-green">Seu palpite:</span> {userBet.home_score} x {userBet.away_score}
           </div>
-          <div className="mt-2 text-xs text-gray-400">Clique no jogo para editar o palpite até {betChangeDeadlineLabel}.</div>
+          <div className="mt-2 text-[10px] text-gray-500">Prazo para edição: {betChangeDeadlineLabel}</div>
         </div>
       )}
       <div className="mt-4 text-sm text-gray-400">

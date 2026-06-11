@@ -36,11 +36,11 @@ export function RankingTab({ ranking, loggedUser, userRankPosition }) {
                   className={`flex items-center justify-between p-4 mb-2 rounded-xl transition-colors hover:bg-dark-700 ${isFirst ? 'bg-dark-700/50' : ''}`}
                 >
                   <div className="flex items-center gap-4">
-                    <div className={`w-10 h-10 flex items-center justify-center rounded-full font-black ${positionStyle}`}>
-                      {index + 1}º
+                    <div className={`w-10 h-10 flex items-center justify-center rounded-full font-black text-xl ${positionStyle}`}>
+                      {isFirst ? '🥇' : isSecond ? '🥈' : isThird ? '🥉' : <span className="text-sm">{index + 1}º</span>}
                     </div>
                     <span className={`text-lg font-semibold ${isFirst ? 'text-white' : 'text-gray-300'}`}>
-                      {user.username}
+                      {user.first_name ? `${user.first_name} ${user.last_name || ''}`.trim() : user.username}
                     </span>
                   </div>
                   <div className="flex items-baseline gap-1">
