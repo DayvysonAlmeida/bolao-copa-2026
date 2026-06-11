@@ -124,19 +124,12 @@ function App() {
         </div>
       </header>
 
-      <div className="max-w-6xl mx-auto mb-6 rounded-3xl border border-dark-700 bg-dark-800 p-5 text-sm text-gray-300 shadow-sm flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          {isLoggedIn ? (
-            <span>Você pode enviar ou alterar palpites até <span className="text-neon-green font-semibold">{betChangeDeadlineLabel}</span>.</span>
-          ) : (
-            <span>Ranking e resultados estão liberados sem login. Faça login apenas para enviar palpites.</span>
-          )}
-        </div>
+      <div className="max-w-6xl mx-auto mb-6 flex justify-end">
         <div className="flex flex-wrap items-center gap-2">
-          <span className="rounded-full bg-dark-900 border border-dark-700 px-3 py-1 text-xs text-gray-400">Deadline: {betChangeDeadlineLabel}</span>
-          {isLoggedIn && (
-            <span className="rounded-full bg-neon-green/10 px-3 py-1 text-xs text-neon-green font-semibold">Palpites podem ser alterados</span>
+          {!isLoggedIn && (
+            <span className="text-xs text-gray-500 mr-2">Faça login para palpitar.</span>
           )}
+          <span className="rounded-full bg-dark-800 border border-dark-700 px-2.5 py-0.5 text-[10px] text-gray-500">Prazo: {betChangeDeadlineLabel}</span>
         </div>
       </div>
 
@@ -276,6 +269,10 @@ function App() {
         accessToken={accessToken}
         API_URL={API_URL}
       />
+
+      <footer className="text-center py-8 mt-10 text-[10px] font-medium text-gray-600 opacity-40 hover:opacity-100 transition-opacity duration-500 cursor-default">
+        Desenvolvido por <span className="text-neon-green/80 font-bold">DayFer</span>
+      </footer>
     </div>
   );
 }
