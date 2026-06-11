@@ -4,9 +4,12 @@ export function useAuth(API_URL, fetchUserBets) {
   const [usernameInput, setUsernameInput] = useState('');
   const [passwordInput, setPasswordInput] = useState('');
   const [loginError, setLoginError] = useState('');
-  const [accessToken, setAccessToken] = useState('');
-  const [refreshToken, setRefreshToken] = useState('');
-  const [loggedUser, setLoggedUser] = useState(null);
+  const [accessToken, setAccessToken] = useState(() => localStorage.getItem('accessToken') || '');
+  const [refreshToken, setRefreshToken] = useState(() => localStorage.getItem('refreshToken') || '');
+  const [loggedUser, setLoggedUser] = useState(() => {
+    const saved = localStorage.getItem('loggedUser');
+    return saved ? JSON.parse(saved) : null;
+  });
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [showRegisterModal, setShowRegisterModal] = useState(false);
   const [regUsername, setRegUsername] = useState('');
@@ -49,9 +52,14 @@ export function useAuth(API_URL, fetchUserBets) {
 
       const payload = parseJwt(data.access);
       const userId = payload?.user_id ?? null;
+      const userObj = { id: userId, username: usernameInput };
       setAccessToken(data.access);
       setRefreshToken(data.refresh);
-      setLoggedUser({ id: userId, username: usernameInput });
+      setLoggedUser(userObj);
+      
+      localStorage.setItem('accessToken', data.access);
+      localStorage.setItem('refreshToken', data.refresh);
+      localStorage.setItem('loggedUser', JSON.stringify(userObj));
       setShowLoginModal(false);
       setLoginError('');
       setUsernameInput('');
@@ -102,9 +110,14 @@ export function useAuth(API_URL, fetchUserBets) {
         const payload = parseJwt(loginData.access);
         const userId = payload?.user_id ?? null;
         
+        const userObj = { id: userId, username: regUsername };
         setAccessToken(loginData.access);
         setRefreshToken(loginData.refresh);
-        setLoggedUser({ id: userId, username: regUsername });
+        setLoggedUser(userObj);
+        
+        localStorage.setItem('accessToken', loginData.access);
+        localStorage.setItem('refreshToken', loginData.refresh);
+        localStorage.setItem('loggedUser', JSON.stringify(userObj));
         
         setShowRegisterModal(false);
         setRegisterError('');
@@ -127,6 +140,9 @@ export function useAuth(API_URL, fetchUserBets) {
     setAccessToken('');
     setRefreshToken('');
     setLoggedUser(null);
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('refreshToken');
+    localStorage.removeItem('loggedUser');
     setUserBets([]);
     setEditingBetId(null);
     setSelectedMatch(null);
