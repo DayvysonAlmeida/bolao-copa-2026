@@ -45,17 +45,3 @@ services:
       - VITE_API_URL=http://localhost:8000/api
     depends_on:
       - backend
-
-  sync-worker:
-    build: ./backend
-    command: python manage.py run_live_sync
-    volumes:
-      - ./backend:/app
-    environment:
-      - DATABASE_URL=mysql://admin:admin@db:3306/bolao_db
-      - DEBUG=True
-    depends_on:
-      db:
-        condition: service_healthy
-      backend:
-        condition: service_started
