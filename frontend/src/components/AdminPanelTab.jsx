@@ -8,16 +8,20 @@ export function AdminPanelTab({ matches, users, API_URL, accessToken, onSuccess 
   const [message, setMessage] = useState({ text: '', type: '' });
   const [isLoading, setIsLoading] = useState(false);
 
+  // Garante que users e matches sejam arrays antes de fazer o spread
+  const safeUsers = Array.isArray(users) ? users : [];
+  const safeMatches = Array.isArray(matches) ? matches : [];
+
   // Ordena usuários alfabeticamente para facilitar a busca no select
-  const sortedUsers = [...(users || [])].sort((a, b) => {
-    const nameA = (a.first_name || a.username).toLowerCase();
-    const nameB = (b.first_name || b.username).toLowerCase();
+  const sortedUsers = [...safeUsers].sort((a, b) => {
+    const nameA = (a?.first_name || a?.username || '').toLowerCase();
+    const nameB = (b?.first_name || b?.username || '').toLowerCase();
     return nameA.localeCompare(nameB);
   });
 
   // Filtra apenas jogos que ainda não começaram, ou mostra todos?
   // Admin pode lançar para qualquer jogo, mas vamos ordenar por data
-  const sortedMatches = [...(matches || [])].sort((a, b) => new Date(a.match_date) - new Date(b.match_date));
+  const sortedMatches = [...safeMatches].sort((a, b) => new Date(a?.match_date || 0) - new Date(b?.match_date || 0));
 
   const [allBets, setAllBets] = useState([]);
 
@@ -27,7 +31,15 @@ export function AdminPanelTab({ matches, users, API_URL, accessToken, onSuccess 
       headers: { 'Authorization': `Bearer ${accessToken}` }
     })
     .then(r => r.json())
-    .then(data => setAllBets(data))
+    .then(data => {
+      if (Array.isArray(data)) {
+        setAllBets(data);
+      } else if (data && Array.isArray(data.results)) {
+        setAllBets(data.results);
+      } else {
+        setAllBets([]);
+      }
+    })
     .catch(console.error);
   }, [API_URL, accessToken]);
 
@@ -143,9 +155,9 @@ export function AdminPanelTab({ matches, users, API_URL, accessToken, onSuccess 
                 className="w-full bg-dark-900 border border-dark-700 text-white text-sm rounded-xl focus:ring-yellow-500 focus:border-yellow-500 block p-3"
               >
                 <option value="">-- Escolha um usuário --</option>
-                {sortedUsers.map(u => (
+                {sortedUsers.filter(u => u).map(u => (
                   <option key={u.id} value={u.id}>
-                    {u.first_name || u.username} {u.last_name ? ` ${u.last_name}` : ''}
+                    {u?.first_name || u?.username} {u?.last_name ? ` ${u.last_name}` : ''}
                   </option>
                 ))}
               </select>
@@ -160,15 +172,36 @@ export function AdminPanelTab({ matches, users, API_URL, accessToken, onSuccess 
                 className="w-full bg-dark-900 border border-dark-700 text-white text-sm rounded-xl focus:ring-yellow-500 focus:border-yellow-500 block p-3"
               >
                 <option value="">-- Escolha um jogo --</option>
-                {sortedMatches.map(m => {
-                  const bet = userBets.find(b => b.match === m.id);
-                  const label = bet ? ` 📌 (Já palpitou: ${bet.home_score}x${bet.away_score})` : '';
-                  return (
-                    <option key={m.id} value={m.id}>
-                      {m.home_team.name} x {m.away_team.name} ({new Date(m.match_date).toLocaleDateString('pt-BR')}){label}
-                    </option>
-                  );
-                })}
+                
+                {selectedUserId ? (
+                  <>
+                    <optgroup label="🔴 SEM PALPITE">
+                      {sortedMatches.filter(m => m && !userBets.some(b => b.match === m.id)).map(m => (
+                        <option key={m.id} value={m.id}>
+                          {m?.home_team?.name} x {m?.away_team?.name} ({new Date(m?.match_date || 0).toLocaleDateString('pt-BR')})
+                        </option>
+                      ))}
+                    </optgroup>
+                    <optgroup label="🟢 JÁ PALPITOU (Clique para editar)">
+                      {sortedMatches.filter(m => m && userBets.some(b => b.match === m.id)).map(m => {
+                        const bet = userBets.find(b => b.match === m.id);
+                        return (
+                          <option key={m.id} value={m.id}>
+                            {m?.home_team?.name} x {m?.away_team?.name} (Placar: {bet?.home_score}x{bet?.away_score})
+                          </option>
+                        );
+                      })}
+                    </optgroup>
+                  </>
+                ) : (
+                  <optgroup label="Selecione um usuário primeiro">
+                    {sortedMatches.filter(m => m).map(m => (
+                      <option key={m.id} value={m.id}>
+                        {m?.home_team?.name} x {m?.away_team?.name} ({new Date(m?.match_date || 0).toLocaleDateString('pt-BR')})
+                      </option>
+                    ))}
+                  </optgroup>
+                )}
               </select>
             </div>
           </div>
