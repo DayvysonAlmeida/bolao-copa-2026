@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 export function AdminPanelTab({ matches, users, API_URL, accessToken, onSuccess }) {
   const [selectedUserId, setSelectedUserId] = useState('');
