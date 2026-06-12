@@ -19,6 +19,37 @@ export function AdminPanelTab({ matches, users, API_URL, accessToken, onSuccess 
   // Admin pode lançar para qualquer jogo, mas vamos ordenar por data
   const sortedMatches = [...(matches || [])].sort((a, b) => new Date(a.match_date) - new Date(b.match_date));
 
+  const [allBets, setAllBets] = useState([]);
+
+  // Busca todos os palpites do sistema uma única vez
+  useEffect(() => {
+    fetch(`${API_URL}/bets/`, {
+      headers: { 'Authorization': `Bearer ${accessToken}` }
+    })
+    .then(r => r.json())
+    .then(data => setAllBets(data))
+    .catch(console.error);
+  }, [API_URL, accessToken]);
+
+  const userBets = allBets.filter(b => b.user === parseInt(selectedUserId));
+
+  // Quando o Admin muda a partida, auto-preenche o placar se o usuário já tiver palpite
+  const handleMatchChange = (e) => {
+    const matchId = e.target.value;
+    setSelectedMatchId(matchId);
+    
+    const existingBet = userBets.find(b => b.match === parseInt(matchId));
+    if (existingBet) {
+      setHomeScore(existingBet.home_score);
+      setAwayScore(existingBet.away_score);
+      setMessage({ text: 'Editando palpite existente deste usuário.', type: 'success' });
+    } else {
+      setHomeScore('');
+      setAwayScore('');
+      setMessage({ text: '', type: '' });
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!selectedUserId || !selectedMatchId || homeScore === '' || awayScore === '') {
@@ -30,8 +61,13 @@ export function AdminPanelTab({ matches, users, API_URL, accessToken, onSuccess 
     setMessage({ text: '', type: '' });
 
     try {
-      const response = await fetch(`${API_URL}/bets/`, {
-        method: 'POST',
+      // Verifica se já existe palpite para atualizar, ou cria um novo
+      const existingBet = userBets.find(b => b.match === parseInt(selectedMatchId));
+      const method = existingBet ? 'PUT' : 'POST';
+      const endpoint = existingBet ? `${API_URL}/bets/${existingBet.id}/` : `${API_URL}/bets/`;
+
+      const response = await fetch(endpoint, {
+        method,
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${accessToken}`
@@ -47,13 +83,21 @@ export function AdminPanelTab({ matches, users, API_URL, accessToken, onSuccess 
       const data = await response.json();
 
       if (response.ok) {
-        setMessage({ text: 'Palpite lançado com sucesso pelo Juiz!', type: 'success' });
+        setMessage({ text: `Palpite ${existingBet ? 'atualizado' : 'lançado'} com sucesso pelo Juiz!`, type: 'success' });
+        
+        // Atualiza a lista local de palpites para refletir a mudança instantaneamente
+        if (existingBet) {
+          setAllBets(allBets.map(b => b.id === data.id ? data : b));
+        } else {
+          setAllBets([...allBets, data]);
+        }
+        
         setHomeScore('');
         setAwayScore('');
+        setSelectedMatchId('');
         if (onSuccess) onSuccess();
       } else {
-        // Se a API retornar erro (ex: erro de validação ou restrição customizada)
-        const errorMsg = data.non_field_errors?.[0] || data.detail || 'Erro ao lançar palpite. Verifique se o usuário já tem palpite para este jogo.';
+        const errorMsg = data.non_field_errors?.[0] || data.detail || 'Erro ao lançar palpite.';
         setMessage({ text: errorMsg, type: 'error' });
       }
     } catch (err) {
@@ -112,15 +156,19 @@ export function AdminPanelTab({ matches, users, API_URL, accessToken, onSuccess 
               <label className="text-sm font-medium text-gray-300">Selecione o Jogo</label>
               <select 
                 value={selectedMatchId}
-                onChange={(e) => setSelectedMatchId(e.target.value)}
+                onChange={handleMatchChange}
                 className="w-full bg-dark-900 border border-dark-700 text-white text-sm rounded-xl focus:ring-yellow-500 focus:border-yellow-500 block p-3"
               >
                 <option value="">-- Escolha um jogo --</option>
-                {sortedMatches.map(m => (
-                  <option key={m.id} value={m.id}>
-                    {m.home_team.name} x {m.away_team.name} ({new Date(m.match_date).toLocaleDateString('pt-BR')})
-                  </option>
-                ))}
+                {sortedMatches.map(m => {
+                  const bet = userBets.find(b => b.match === m.id);
+                  const label = bet ? ` 📌 (Já palpitou: ${bet.home_score}x${bet.away_score})` : '';
+                  return (
+                    <option key={m.id} value={m.id}>
+                      {m.home_team.name} x {m.away_team.name} ({new Date(m.match_date).toLocaleDateString('pt-BR')}){label}
+                    </option>
+                  );
+                })}
               </select>
             </div>
           </div>
