@@ -8,6 +8,10 @@ class TeamViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Team.objects.all().order_by('name')
     serializer_class = TeamSerializer
 
+from django.utils.decorators import method_decorator
+from django.views.decorators.cache import cache_page
+
+@method_decorator(cache_page(60), name='dispatch')
 class MatchViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Match.objects.all().order_by('match_date')
     serializer_class = MatchSerializer

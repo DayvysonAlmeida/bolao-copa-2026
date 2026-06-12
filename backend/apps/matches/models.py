@@ -36,8 +36,8 @@ class Match(models.Model):
         # 1. Primeiro, salva a partida no banco de dados normalmente
         super().save(*args, **kwargs)
 
-        # 2. Se a partida terminou e tem um placar definido, calcula os pontos
-        if self.status == 'FINISHED' and self.home_score is not None and self.away_score is not None:
+        # 2. Se a partida terminou ou está em andamento e tem um placar definido, calcula os pontos (ao vivo)
+        if self.status in ['FINISHED', 'IN_PROGRESS'] and self.home_score is not None and self.away_score is not None:
             
             # Pega todos os palpites atrelados a esta partida
             for bet in self.bets.all():

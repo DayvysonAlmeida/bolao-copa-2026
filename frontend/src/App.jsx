@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from './hooks/useAuth';
 import { useBets } from './hooks/useBets';
+import { DashboardTab } from './components/DashboardTab';
 import { MatchesTab } from './components/MatchesTab';
 import { RankingTab } from './components/RankingTab';
 import { MyBetsTab } from './components/MyBetsTab';
@@ -15,7 +16,7 @@ function App() {
   const [matches, setMatches] = useState([]);
   const [ranking, setRanking] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('matches');
+  const [activeTab, setActiveTab] = useState('dashboard');
   const [showProfileModal, setShowProfileModal] = useState(false);
 
   const {
@@ -76,13 +77,37 @@ function App() {
   }, [API_URL]);
 
   useEffect(() => {
-    if (activeTab === 'ranking') {
+    if (activeTab === 'ranking' || activeTab === 'dashboard') {
       fetch(`${API_URL}/ranking/`)
         .then(response => response.json())
         .then(data => setRanking(data))
         .catch(error => console.error("Erro ao buscar ranking:", error));
     }
   }, [activeTab, API_URL]);
+
+  // Polling (Auto-Refresh) a cada 60 segundos para tela "ao vivo"
+  useEffect(() => {
+    const fetchLiveUpdates = () => {
+      fetch(`${API_URL}/matches/`)
+        .then(res => res.json())
+        .then(data => setMatches(data))
+        .catch(err => console.error("Erro ao atualizar jogos:", err));
+
+      if (activeTab === 'ranking' || activeTab === 'dashboard') {
+        fetch(`${API_URL}/ranking/`)
+          .then(res => res.json())
+          .then(data => setRanking(data))
+          .catch(err => console.error("Erro ao atualizar ranking:", err));
+      }
+
+      if (isLoggedIn) {
+        fetchUserBets();
+      }
+    };
+
+    const intervalId = setInterval(fetchLiveUpdates, 60000); // 60 segundos
+    return () => clearInterval(intervalId);
+  }, [API_URL, activeTab, isLoggedIn, fetchUserBets]);
 
   return (
     <div className="min-h-screen bg-dark-900 text-gray-100 p-8 pb-20 relative">
@@ -139,10 +164,20 @@ function App() {
         </div>
       )}
 
-      <nav className="flex justify-center gap-4 mb-12">
+      <nav className="flex justify-center gap-2 mb-10 flex-wrap">
+        <button 
+          onClick={() => setActiveTab('dashboard')}
+          className={`px-5 py-2.5 rounded-full font-bold transition-all text-sm ${
+            activeTab === 'dashboard' 
+            ? 'bg-neon-green text-dark-900 shadow-[0_0_15px_rgba(4,211,97,0.4)]' 
+            : 'bg-dark-800 text-gray-400 hover:text-white hover:bg-dark-700'
+          }`}
+        >
+          🏠 Dashboard
+        </button>
         <button 
           onClick={() => setActiveTab('matches')}
-          className={`px-8 py-3 rounded-full font-bold transition-all ${
+          className={`px-5 py-2.5 rounded-full font-bold transition-all text-sm ${
             activeTab === 'matches' 
             ? 'bg-neon-green text-dark-900 shadow-[0_0_15px_rgba(4,211,97,0.4)]' 
             : 'bg-dark-800 text-gray-400 hover:text-white hover:bg-dark-700'
@@ -152,17 +187,17 @@ function App() {
         </button>
         <button 
           onClick={() => setActiveTab('my-bets')}
-          className={`px-8 py-3 rounded-full font-bold transition-all ${
+          className={`px-5 py-2.5 rounded-full font-bold transition-all text-sm ${
             activeTab === 'my-bets' 
             ? 'bg-neon-green text-dark-900 shadow-[0_0_15px_rgba(4,211,97,0.4)]' 
             : 'bg-dark-800 text-gray-400 hover:text-white hover:bg-dark-700'
           }`}
         >
-          📌 Meus palpites
+          📌 Meus Palpites
         </button>
         <button 
           onClick={() => setActiveTab('ranking')}
-          className={`px-8 py-3 rounded-full font-bold transition-all ${
+          className={`px-5 py-2.5 rounded-full font-bold transition-all text-sm ${
             activeTab === 'ranking' 
             ? 'bg-neon-green text-dark-900 shadow-[0_0_15px_rgba(4,211,97,0.4)]' 
             : 'bg-dark-800 text-gray-400 hover:text-white hover:bg-dark-700'
@@ -178,6 +213,18 @@ function App() {
           <h3 className="text-xl font-bold text-white mb-2">Acordando o servidor...</h3>
           <p className="text-gray-400 text-sm max-w-md text-center">Como estamos em um servidor gratuito, o primeiro carregamento pode levar até 50 segundos. Obrigado pela paciência! ⚽</p>
         </div>
+      )}
+
+      {activeTab === 'dashboard' && (
+        <DashboardTab
+          ranking={ranking}
+          matches={matches}
+          userBets={userBets}
+          loggedUser={loggedUser}
+          handleOpenModal={handleOpenModal}
+          setActiveTab={setActiveTab}
+          setShowLoginModal={setShowLoginModal}
+        />
       )}
 
       {!isLoading && activeTab === 'matches' && (

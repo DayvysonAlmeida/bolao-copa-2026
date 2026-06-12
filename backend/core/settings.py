@@ -100,15 +100,14 @@ DATABASES = {
     )
 }
 
-# Se estivermos usando MySQL (como no Aiven) via variável de ambiente
-db_url = os.environ.get('DATABASE_URL')
-if db_url and db_url.startswith('mysql'):
+# Se estivermos usando MySQL com SSL (ex: Aiven em produção) via variável de ambiente
+db_url = os.environ.get('DATABASE_URL', '')
+if db_url.startswith('mysql') and not DEBUG:
     import ssl
     ctx = ssl.create_default_context()
     ctx.check_hostname = False
     ctx.verify_mode = ssl.CERT_NONE
 
-    # Aiven MySQL requer SSL. Para evitar erros de certificado no Render sem o arquivo ca.pem:
     DATABASES['default']['OPTIONS'] = {
         'ssl': ctx
     }
@@ -140,6 +139,14 @@ AUTH_PASSWORD_VALIDATORS = [
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
 ]
+
+# Cache Configuration (Protege o banco de dados contra flood de polling do React)
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': 'bolao-live-cache',
+    }
+}
 
 
 # Internationalization

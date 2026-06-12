@@ -18,3 +18,8 @@ backend/env/
 Thumbs.db
 
 /data
+
+.agents
+/agents
+.sql
+/inspirações
