@@ -33,7 +33,7 @@ export function useAuth(API_URL, fetchUserBets) {
     }
   };
 
-  const handleLoginSubmit = async (e, setStatusMessage) => {
+  const handleLoginSubmit = async (e, setStatusMessage, fetchUserBets) => {
     e.preventDefault();
     if (!usernameInput || !passwordInput) {
       setLoginError('Preencha usuário e senha.');
@@ -79,7 +79,7 @@ export function useAuth(API_URL, fetchUserBets) {
       setUsernameInput('');
       setPasswordInput('');
       setStatusMessage({ type: 'success', text: 'Login realizado. Agora envie seu palpite.' });
-      if (userId) {
+      if (userId && typeof fetchUserBets === 'function') {
         await fetchUserBets(data.access);
       }
     } catch (error) {
@@ -88,7 +88,7 @@ export function useAuth(API_URL, fetchUserBets) {
     }
   };
 
-  const handleRegisterSubmit = async (e, setStatusMessage) => {
+  const handleRegisterSubmit = async (e, setStatusMessage, fetchUserBets) => {
     e.preventDefault();
     if (!regUsername || !regPassword || !regConfirmPassword || !regFirstName || !regLastName || !regEmail) {
       setRegisterError('Preencha todos os campos.');
@@ -158,7 +158,7 @@ export function useAuth(API_URL, fetchUserBets) {
         setRegConfirmPassword('');
         setStatusMessage({ type: 'success', text: 'Conta criada com sucesso! Você já está logado.' });
         
-        if (userId) {
+        if (userId && typeof fetchUserBets === 'function') {
           await fetchUserBets(loginData.access);
         }
       }

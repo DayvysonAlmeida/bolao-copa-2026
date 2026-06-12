@@ -10,6 +10,12 @@ services:
       - MYSQL_ROOT_PASSWORD=root_admin
     ports:
       - "3307:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uadmin", "-padmin"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
 
   backend:
     build: ./backend
@@ -19,10 +25,14 @@ services:
     ports:
       - "8000:8000"
     environment:
-      # Nova URL apontando para o MySQL na porta 3306
       - DATABASE_URL=mysql://admin:admin@db:3306/bolao_db
+      - DEBUG=True
+      - SECRET_KEY=django-insecure-docker-dev-key-apenas-local-nao-usar-em-prod
+      - FRONTEND_URL=*
+      - API_SPORTS_KEY=7fd5753baf1aa6e71ed9ea1f812bbbfc
     depends_on:
-      - db
+      db:
+        condition: service_healthy
 
   frontend:
     build: ./frontend
@@ -32,6 +42,20 @@ services:
       - ./frontend:/app
       - /app/node_modules # Impede que o volume local sobrescreva o node_modules do container
     environment:
-      - VITE_API_URL=http://localhost:8000
+      - VITE_API_URL=http://localhost:8000/api
     depends_on:
       - backend
+
+  sync-worker:
+    build: ./backend
+    command: python manage.py run_live_sync
+    volumes:
+      - ./backend:/app
+    environment:
+      - DATABASE_URL=mysql://admin:admin@db:3306/bolao_db
+      - DEBUG=True
+    depends_on:
+      db:
+        condition: service_healthy
+      backend:
+        condition: service_started

@@ -27,6 +27,10 @@ class MyBetsListView(generics.ListAPIView):
             return Bet.objects.none()
         return Bet.objects.filter(user=user)
 
+from django.utils.decorators import method_decorator
+from django.views.decorators.cache import cache_page
+
+@method_decorator(cache_page(60), name='dispatch')
 class RankingListView(generics.ListAPIView):
     """Retorna a lista de usuários ordenada pela maior pontuação"""
     serializer_class = RankingSerializer
