@@ -237,6 +237,8 @@ function App() {
           handleOpenModal={handleOpenModal}
           setActiveTab={setActiveTab}
           setShowLoginModal={setShowLoginModal}
+          API_URL={API_URL}
+          accessToken={accessToken}
         />
       )}
 

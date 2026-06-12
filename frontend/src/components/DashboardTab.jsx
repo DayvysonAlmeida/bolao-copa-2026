@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 
 // ─── Gráfico de linha SVG ─────────────────────────────────────────────────────
 function LineChart({ labels, series }) {
@@ -152,12 +152,29 @@ function PublicDashboard({ ranking, matches, setActiveTab, setShowLoginModal }) 
   const [selectedGroup, setSelectedGroup] = useState('A');
 
   const liveMatches = matches.filter(m => m.status === 'IN_PROGRESS');
-  const finishedMatches = matches.filter(m => m.status === 'FINISHED')
-    .sort((a, b) => new Date(b.match_date) - new Date(a.match_date))
-    .slice(0, 5);
+  const finishedMatchesAll = matches.filter(m => m.status === 'FINISHED')
+    .sort((a, b) => new Date(b.match_date) - new Date(a.match_date));
+  const finishedMatches = finishedMatchesAll.slice(0, 5);
   const upcomingMatches = matches.filter(m => m.status === 'SCHEDULED')
     .sort((a, b) => new Date(a.match_date) - new Date(b.match_date))
     .slice(0, 4);
+
+  // Tendências e Goleada
+  let homeWins = 0, awayWins = 0, draws = 0;
+  let maxGoalsMatch = null, maxGoals = -1;
+  finishedMatchesAll.forEach(m => {
+    if (m.home_score > m.away_score) homeWins++;
+    else if (m.home_score < m.away_score) awayWins++;
+    else draws++;
+    const tg = m.home_score + m.away_score;
+    if (tg > maxGoals) { maxGoals = tg; maxGoalsMatch = m; }
+  });
+  const totalFinishedTrend = homeWins + awayWins + draws || 1;
+  const trendSlices = [
+    { pct: (homeWins / totalFinishedTrend) * 100, label: 'Casa' },
+    { pct: (draws / totalFinishedTrend) * 100, label: 'Empate' },
+    { pct: (awayWins / totalFinishedTrend) * 100, label: 'Fora' }
+  ];
   const top5 = ranking.slice(0, 5);
   const groups = [...new Set(matches.map(m => m.group).filter(Boolean))].sort();
 
@@ -231,8 +248,33 @@ function PublicDashboard({ ranking, matches, setActiveTab, setShowLoginModal }) 
       {/* ── Linha principal ───────────────────────────────────────────── */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
 
-        {/* Coluna esquerda: Ao Vivo + Últimos Jogos */}
-        <div className="lg:col-span-5 flex flex-col gap-4">
+        {/* Coluna esquerda: Gráficos + Jogos */}
+        <div className="lg:col-span-4 flex flex-col gap-4">
+
+          {/* Tendências */}
+          <div className="bg-dark-800 border border-dark-700 rounded-2xl p-4">
+            <h3 className="font-bold text-white text-sm uppercase tracking-wider mb-4">📊 Tendências da Copa</h3>
+            {finishedMatchesAll.length > 0 ? (
+              <div className="flex items-center gap-4">
+                <div className="w-24 h-24 flex-shrink-0">
+                  <DonutChart slices={trendSlices} size={96} />
+                </div>
+                <div className="flex flex-col gap-2 flex-1">
+                  <div className="flex justify-between text-xs"><div className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-neon-green"></span><span className="text-gray-300">Mandante</span></div><span className="font-bold">{homeWins}</span></div>
+                  <div className="flex justify-between text-xs"><div className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-yellow-400"></span><span className="text-gray-300">Empate</span></div><span className="font-bold">{draws}</span></div>
+                  <div className="flex justify-between text-xs"><div className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-blue-500"></span><span className="text-gray-300">Visitante</span></div><span className="font-bold">{awayWins}</span></div>
+                </div>
+              </div>
+            ) : <p className="text-center text-gray-500 text-sm py-4">Sem dados.</p>}
+          </div>
+
+          {/* Goleada */}
+          {maxGoalsMatch && maxGoals > 0 && (
+            <div className="bg-dark-800 border border-dark-700 rounded-2xl p-4 bg-gradient-to-br from-dark-800 to-purple-900/10">
+              <h3 className="font-bold text-purple-400 text-xs uppercase tracking-wider mb-3">🔥 Jogo Mais Emocionante</h3>
+              <MatchRow match={maxGoalsMatch} onClick={() => {}} />
+            </div>
+          )}
 
           {/* Jogos ao vivo */}
           {liveMatches.length > 0 && (
@@ -263,8 +305,8 @@ function PublicDashboard({ ranking, matches, setActiveTab, setShowLoginModal }) 
           </div>
         </div>
 
-        {/* Coluna central: Ranking */}
-        <div className="lg:col-span-3 bg-dark-800 border border-dark-700 rounded-2xl p-4">
+        {/* Coluna central: Ranking com Pódio */}
+        <div className="lg:col-span-4 bg-dark-800 border border-dark-700 rounded-2xl p-4 flex flex-col">
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-bold text-white text-sm uppercase tracking-wider">🏆 Ranking Geral</h3>
             <button onClick={() => setActiveTab('ranking')} className="text-xs text-neon-green hover:underline">Ver completo →</button>
@@ -272,30 +314,55 @@ function PublicDashboard({ ranking, matches, setActiveTab, setShowLoginModal }) 
           {top5.length === 0 ? (
             <p className="text-center text-gray-500 text-sm py-8">Nenhum palpite ainda.</p>
           ) : (
-            <div className="flex flex-col gap-1.5">
-              {top5.map((u, i) => {
-                const medals = ['🥇', '🥈', '🥉'];
-                const name = u.first_name ? `${u.first_name} ${u.last_name || ''}`.trim() : u.username;
-                const podium = i === 0;
-                return (
-                  <div key={u.id} className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all
-                    ${podium ? 'bg-yellow-400/10 border border-yellow-400/20' : 'hover:bg-dark-700'}`}>
-                    <span className="text-lg w-6 text-center flex-shrink-0">
-                      {i < 3 ? medals[i] : <span className="text-xs text-gray-500 font-bold">{i + 1}º</span>}
-                    </span>
-                    <div className="flex-1 min-w-0">
-                      <p className={`text-sm font-bold truncate ${podium ? 'text-yellow-300' : 'text-white'}`}>{name}</p>
+            <div className="flex flex-col gap-4 flex-1">
+              {/* Pódio Visual (Top 3) */}
+              <div className="flex items-end justify-center h-44 gap-2 mb-2">
+                {/* 2º Lugar */}
+                {top5[1] && (
+                  <div className="flex flex-col items-center w-1/3 animate-[slideUp_0.5s_ease-out]">
+                    <span className="text-sm font-bold text-gray-300 truncate w-full text-center px-1">{top5[1].first_name || top5[1].username}</span>
+                    <span className="text-[10px] font-black text-white mb-1">{top5[1].total_points} pts</span>
+                    <div className="w-full bg-gradient-to-t from-dark-700 to-dark-600 rounded-t-xl h-20 border-t-2 border-gray-400 flex items-start justify-center pt-2">
+                      <span className="text-2xl">🥈</span>
                     </div>
-                    <span className={`text-lg font-black flex-shrink-0 ${podium ? 'text-yellow-400' : 'text-neon-green'}`}>
-                      {u.total_points}
-                      <span className="text-xs text-gray-500 font-normal ml-0.5">pts</span>
-                    </span>
                   </div>
-                );
-              })}
+                )}
+                {/* 1º Lugar */}
+                {top5[0] && (
+                  <div className="flex flex-col items-center w-1/3 z-10 animate-[slideUp_0.7s_ease-out]">
+                    <span className="text-2xl mb-1 animate-bounce">👑</span>
+                    <span className="text-sm font-bold text-yellow-400 truncate w-full text-center px-1">{top5[0].first_name || top5[0].username}</span>
+                    <span className="text-[10px] font-black text-white mb-1">{top5[0].total_points} pts</span>
+                    <div className="w-full bg-gradient-to-t from-yellow-500/20 to-yellow-500/40 rounded-t-xl h-28 border-t-2 border-yellow-400 flex items-start justify-center pt-2 shadow-[0_-5px_20px_rgba(250,204,21,0.2)]">
+                      <span className="text-2xl">🥇</span>
+                    </div>
+                  </div>
+                )}
+                {/* 3º Lugar */}
+                {top5[2] && (
+                  <div className="flex flex-col items-center w-1/3 animate-[slideUp_0.6s_ease-out]">
+                    <span className="text-sm font-bold text-orange-400 truncate w-full text-center px-1">{top5[2].first_name || top5[2].username}</span>
+                    <span className="text-[10px] font-black text-white mb-1">{top5[2].total_points} pts</span>
+                    <div className="w-full bg-gradient-to-t from-orange-900/40 to-orange-800/40 rounded-t-xl h-16 border-t-2 border-orange-500 flex items-start justify-center pt-2">
+                      <span className="text-2xl">🥉</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* 4º e 5º lugares */}
+              <div className="flex flex-col gap-1.5">
+                {top5.slice(3).map((u, i) => (
+                  <div key={u.id} className="flex items-center gap-3 px-3 py-2 rounded-xl bg-dark-900/50 border border-dark-700/50">
+                    <span className="text-[10px] text-gray-500 font-bold w-6">{i + 4}º</span>
+                    <span className="flex-1 text-sm text-gray-300 font-semibold truncate">{u.first_name || u.username}</span>
+                    <span className="text-xs font-black text-neon-green">{u.total_points} pts</span>
+                  </div>
+                ))}
+              </div>
 
               {/* CTA para logar */}
-              <div className="mt-3 pt-3 border-t border-dark-700">
+              <div className="mt-auto pt-3 border-t border-dark-700">
                 <button
                   onClick={() => setShowLoginModal(true)}
                   className="w-full py-2 rounded-xl border border-neon-green/30 text-neon-green text-xs font-bold hover:bg-neon-green/10 transition-all"
@@ -377,12 +444,14 @@ function PublicDashboard({ ranking, matches, setActiveTab, setShowLoginModal }) 
 // ═══════════════════════════════════════════════════════════════════════════════
 // DASHBOARD PESSOAL (logado)
 // ═══════════════════════════════════════════════════════════════════════════════
-function PersonalDashboard({ ranking, matches, userBets, loggedUser, handleOpenModal, setActiveTab }) {
+function PersonalDashboard({ ranking, matches, userBets, loggedUser, handleOpenModal, setActiveTab, API_URL, accessToken }) {
   const [selectedGroup, setSelectedGroup] = useState('A');
+  const [leaderBets, setLeaderBets] = useState([]);
 
   const userRankPos = ranking.findIndex(u => u.id === loggedUser.id);
   const userRankData = userRankPos >= 0 ? ranking[userRankPos] : null;
   const top5 = ranking.slice(0, 5);
+  const isLeader = userRankPos === 0;
 
   // Stats pessoais
   const totalBets = userBets.length;
@@ -391,6 +460,48 @@ function PersonalDashboard({ ranking, matches, userBets, loggedUser, handleOpenM
   const wrongBets = userBets.filter(b => b.points_earned === 0 && matches.find(m => m.id === b.match)?.status === 'FINISHED').length;
   const hitRate = totalBets > 0 ? Math.round(((exactBets + winnerBets) / totalBets) * 100) : 0;
   const myPoints = userRankData?.total_points ?? 0;
+
+  // Gráfico Circular de Precisão
+  const totalResolved = exactBets + winnerBets + wrongBets || 1;
+  const precisionSlices = [
+    { pct: (exactBets / totalResolved) * 100, label: 'Cravada' },
+    { pct: (winnerBets / totalResolved) * 100, label: 'Acerto' },
+    { pct: (wrongBets / totalResolved) * 100, label: 'Erro' }
+  ];
+
+  // Gamificação: Streak (Badges)
+  const myFinishedBets = userBets
+    .filter(b => matches.find(m => m.id === b.match)?.status === 'FINISHED')
+    .sort((a, b) => new Date(matches.find(m => m.id === a.match).match_date) - new Date(matches.find(m => m.id === b.match).match_date));
+  
+  let streakBadge = null;
+  if (myFinishedBets.length >= 2) {
+    const last2 = myFinishedBets.slice(-2);
+    if (last2.every(b => b.points_earned === 5)) streakBadge = { icon: '🔥', text: 'Em Chamas', color: 'text-orange-500 bg-orange-500/10 border-orange-500/30' };
+  }
+  if (!streakBadge && myFinishedBets.length >= 3) {
+    const last3 = myFinishedBets.slice(-3);
+    if (last3.every(b => b.points_earned === 0)) streakBadge = { icon: '🥶', text: 'Gelado', color: 'text-cyan-400 bg-cyan-400/10 border-cyan-400/30' };
+  }
+  if (!streakBadge && isLeader) {
+    streakBadge = { icon: '👑', text: 'Líder Isolado', color: 'text-yellow-400 bg-yellow-400/10 border-yellow-400/30' };
+  }
+
+  // Fetch Secador do Líder
+  useEffect(() => {
+    if (!isLeader && API_URL && accessToken && top5.length > 0) {
+      const leaderId = top5[0].id;
+      fetch(`${API_URL}/bets/`, {
+        headers: { 'Authorization': `Bearer ${accessToken}` }
+      })
+      .then(r => r.json())
+      .then(data => {
+        const betsArray = Array.isArray(data) ? data : (data.results || []);
+        setLeaderBets(betsArray.filter(b => b.user === leaderId));
+      })
+      .catch(console.error);
+    }
+  }, [isLeader, API_URL, accessToken, top5]);
 
   // Jogos ao vivo com meu palpite
   const liveMatches = matches.filter(m => m.status === 'IN_PROGRESS');
@@ -406,6 +517,13 @@ function PersonalDashboard({ ranking, matches, userBets, loggedUser, handleOpenM
     .filter(m => m.status === 'SCHEDULED' && !userBets.find(b => b.match === m.id))
     .sort((a, b) => new Date(a.match_date) - new Date(b.match_date))
     .slice(0, 3);
+
+  // Banner de Urgência (Jogos nas próximas 12h sem palpite)
+  const now = new Date();
+  const urgentMatches = nextWithoutBet.filter(m => {
+    const hoursLeft = (new Date(m.match_date) - now) / 3600000;
+    return hoursLeft > 0 && hoursLeft <= 12;
+  });
 
   // Próximos com palpite
   const nextWithBet = matches
@@ -447,11 +565,36 @@ function PersonalDashboard({ ranking, matches, userBets, loggedUser, handleOpenM
   return (
     <div className="max-w-[1400px] mx-auto animate-fadeIn space-y-4">
 
+      {/* ── Banner de Urgência ──────────────────────────────────────── */}
+      {urgentMatches.length > 0 && (
+        <div className="bg-gradient-to-r from-red-600/90 to-orange-500/90 border border-red-400 rounded-2xl p-4 flex items-center justify-between shadow-[0_0_20px_rgba(239,68,68,0.3)] animate-[pulse_2s_ease-in-out_infinite]">
+          <div className="flex items-center gap-3">
+            <span className="text-3xl">⚠️</span>
+            <div>
+              <h3 className="text-white font-black uppercase tracking-wider">Atenção! Palpite Atrasado!</h3>
+              <p className="text-red-100 text-sm">Você tem {urgentMatches.length} jogo(s) começando nas próximas 12 horas sem palpite oficial. Não perca pontos!</p>
+            </div>
+          </div>
+          <button onClick={() => handleOpenModal(urgentMatches[0])} className="px-4 py-2 bg-white text-red-600 font-bold rounded-xl hover:scale-105 transition-transform shadow-lg">
+            Resolver Agora
+          </button>
+        </div>
+      )}
+
       {/* ── Header personalizado ──────────────────────────────────────── */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <div>
-          <p className="text-gray-400 text-sm">Bem-vindo de volta,</p>
-          <h2 className="text-2xl font-black text-white">{firstName} <span className="text-neon-green">👋</span></h2>
+        <div className="flex items-center gap-3">
+          <div>
+            <p className="text-gray-400 text-sm">Bem-vindo de volta,</p>
+            <div className="flex items-center gap-3">
+              <h2 className="text-2xl font-black text-white">{firstName} <span className="text-neon-green">👋</span></h2>
+              {streakBadge && (
+                <span className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-xs font-bold uppercase tracking-wider ${streakBadge.color}`}>
+                  {streakBadge.icon} {streakBadge.text}
+                </span>
+              )}
+            </div>
+          </div>
         </div>
         {userRankData && (
           <div className="flex items-center gap-3 bg-dark-800 border border-neon-green/20 rounded-2xl px-4 py-3">
@@ -464,18 +607,29 @@ function PersonalDashboard({ ranking, matches, userBets, loggedUser, handleOpenM
                 {userRankPos + 1}º lugar · <span className="text-white">{myPoints} pts</span>
               </p>
             </div>
-            {userRankPos === 0 && <span className="text-2xl">👑</span>}
+            {isLeader && <span className="text-2xl">👑</span>}
           </div>
         )}
       </div>
 
       {/* ── Meus cards de stats ──────────────────────────────────────── */}
-      <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
-        <StatCard icon="🏆" label="Minha Posição" value={userRankPos >= 0 ? `${userRankPos + 1}º` : '--'} sub="no ranking" color="yellow" highlight />
-        <StatCard icon="⭐" label="Meus Pontos" value={myPoints} sub="pontos totais" color="neon-green" highlight />
-        <StatCard icon="🎯" label="Placares Exatos" value={exactBets} sub="+5 pts cada" color="blue" />
-        <StatCard icon="✅" label="Vencedores Certos" value={winnerBets} sub="+3 pts cada" color="neon-green" />
-        <StatCard icon="📊" label="Taxa de Acerto" value={`${hitRate}%`} sub={`${totalBets} palpites`} color={hitRate >= 50 ? 'neon-green' : hitRate >= 30 ? 'yellow' : 'red'} highlight />
+      <div className="grid grid-cols-2 lg:grid-cols-6 gap-3">
+        <StatCard icon="🏆" label="Posição" value={userRankPos >= 0 ? `${userRankPos + 1}º` : '--'} sub="no ranking" color="yellow" highlight />
+        <StatCard icon="⭐" label="Pontos" value={myPoints} sub="totais" color="neon-green" highlight />
+        <StatCard icon="🎯" label="Cravadas" value={exactBets} sub="+5 pts" color="blue" />
+        <StatCard icon="✅" label="Acertos" value={winnerBets} sub="+3 pts" color="neon-green" />
+        <StatCard icon="📊" label="Hit Rate" value={`${hitRate}%`} sub={`${totalBets} palpites`} color={hitRate >= 50 ? 'neon-green' : hitRate >= 30 ? 'yellow' : 'red'} highlight />
+        
+        {/* Gráfico Circular de Precisão */}
+        <div className="rounded-2xl border border-dark-700 bg-dark-800 p-3 flex items-center gap-3 relative overflow-hidden">
+          <div className="absolute top-0 right-0 p-1 opacity-20"><span className="text-4xl">🎯</span></div>
+          <div className="w-12 h-12 flex-shrink-0 z-10"><DonutChart slices={precisionSlices} size={48} /></div>
+          <div className="flex flex-col z-10 w-full">
+            <div className="flex justify-between items-center w-full"><span className="text-[9px] text-gray-400 font-bold">EXATO</span><span className="text-[10px] text-neon-green font-black">{precisionSlices[0].pct.toFixed(0)}%</span></div>
+            <div className="flex justify-between items-center w-full"><span className="text-[9px] text-gray-400 font-bold">ACERTO</span><span className="text-[10px] text-yellow-400 font-black">{precisionSlices[1].pct.toFixed(0)}%</span></div>
+            <div className="flex justify-between items-center w-full"><span className="text-[9px] text-gray-400 font-bold">ERRO</span><span className="text-[10px] text-red-400 font-black">{precisionSlices[2].pct.toFixed(0)}%</span></div>
+          </div>
+        </div>
       </div>
 
       {/* ── Jogos ao vivo (com meu palpite destacado) ─────────────────── */}
@@ -530,9 +684,9 @@ function PersonalDashboard({ ranking, matches, userBets, loggedUser, handleOpenM
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
 
         {/* Meus últimos resultados */}
-        <div className="lg:col-span-4 bg-dark-800 border border-dark-700 rounded-2xl p-4">
+        <div className="lg:col-span-3 bg-dark-800 border border-dark-700 rounded-2xl p-4">
           <div className="flex items-center justify-between mb-3">
-            <h3 className="font-bold text-white text-sm uppercase tracking-wider">📋 Meus Últimos Resultados</h3>
+            <h3 className="font-bold text-white text-sm uppercase tracking-wider">📋 Histórico</h3>
             <button onClick={() => setActiveTab('my-bets')} className="text-xs text-neon-green hover:underline">Ver todos →</button>
           </div>
           {myLastResults.length === 0 ? (
@@ -570,9 +724,9 @@ function PersonalDashboard({ ranking, matches, userBets, loggedUser, handleOpenM
         </div>
 
         {/* Gráfico de evolução */}
-        <div className="lg:col-span-5 bg-dark-800 border border-dark-700 rounded-2xl p-4">
+        <div className="lg:col-span-4 bg-dark-800 border border-dark-700 rounded-2xl p-4">
           <div className="flex items-center justify-between mb-2">
-            <h3 className="font-bold text-white text-sm uppercase tracking-wider">📈 Evolução da Pontuação</h3>
+            <h3 className="font-bold text-white text-sm uppercase tracking-wider">📈 Evolução de Pontos</h3>
           </div>
           <div className="flex flex-wrap gap-3 mb-2">
             {seriesRaw.map((s, i) => (
@@ -586,6 +740,60 @@ function PersonalDashboard({ ranking, matches, userBets, loggedUser, handleOpenM
             <LineChart labels={chartLabels} series={seriesRaw} />
           </div>
         </div>
+
+        {/* Secador do Líder */}
+        {!isLeader && nextWithBet.length > 0 && top5.length > 0 && (
+          <div className="lg:col-span-5 bg-dark-800 border border-blue-500/20 rounded-2xl p-4 bg-gradient-to-br from-dark-800 to-blue-900/10">
+            <div className="flex items-center gap-2 mb-4">
+              <span className="text-lg">👀</span>
+              <h3 className="font-bold text-blue-400 text-sm uppercase tracking-wider">Secador do Líder</h3>
+            </div>
+            {(() => {
+              const nextM = nextWithBet[0]; // Próximo jogo que o usuário palpitou
+              const myB = userBets.find(b => b.match === nextM.id);
+              const leaderB = leaderBets.find(b => b.match === nextM.id);
+              return (
+                <div className="flex flex-col gap-3">
+                  <div className="flex items-center justify-center gap-2 mb-2">
+                    {nextM.flag_home && <img src={nextM.flag_home} className="w-5 h-3 object-cover rounded-sm" alt=""/>}
+                    <span className="text-xs text-gray-400 font-bold uppercase">{nextM.home_team_name} x {nextM.away_team_name}</span>
+                    {nextM.flag_away && <img src={nextM.flag_away} className="w-5 h-3 object-cover rounded-sm" alt=""/>}
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="border border-neon-green/30 bg-neon-green/5 rounded-xl p-3 text-center">
+                      <p className="text-[10px] text-gray-500 font-bold uppercase mb-1">O seu palpite</p>
+                      <p className="text-2xl font-black text-white">{myB.home_score} x {myB.away_score}</p>
+                    </div>
+                    <div className="border border-blue-500/30 bg-blue-500/5 rounded-xl p-3 text-center relative overflow-hidden">
+                      <p className="text-[10px] text-gray-500 font-bold uppercase mb-1">Palpite de {top5[0].first_name || top5[0].username}</p>
+                      {leaderB ? (
+                        <p className="text-2xl font-black text-white">{leaderB.home_score} x {leaderB.away_score}</p>
+                      ) : (
+                        <p className="text-xs text-gray-400 mt-2 italic">Ainda não palpitou</p>
+                      )}
+                    </div>
+                  </div>
+                  {leaderB && myB.home_score === leaderB.home_score && myB.away_score === leaderB.away_score && (
+                    <p className="text-[10px] text-yellow-500 text-center mt-1">Vocês colocaram o mesmo placar! Ninguém ganha vantagem.</p>
+                  )}
+                  {leaderB && (myB.home_score !== leaderB.home_score || myB.away_score !== leaderB.away_score) && (
+                    <p className="text-[10px] text-neon-green text-center mt-1 font-bold">Chance de tirar a diferença! Torça contra!</p>
+                  )}
+                </div>
+              );
+            })()}
+          </div>
+        )}
+
+        {isLeader && (
+           <div className="lg:col-span-5 bg-dark-800 border border-yellow-500/20 rounded-2xl p-4 flex items-center justify-center bg-gradient-to-br from-dark-800 to-yellow-900/10">
+             <div className="text-center">
+               <div className="text-5xl mb-3 animate-bounce">👑</div>
+               <h3 className="font-black text-yellow-400 text-lg uppercase tracking-wider">Você é o Líder!</h3>
+               <p className="text-gray-400 text-xs mt-1 max-w-[200px] mx-auto">Todos estão tentando alcançar você. Mantenha os acertos para garantir a taça!</p>
+             </div>
+           </div>
+        )}
 
         {/* Ranking top 5 com destaque pessoal */}
         <div className="lg:col-span-3 bg-dark-800 border border-dark-700 rounded-2xl p-4">
@@ -705,7 +913,7 @@ function PersonalDashboard({ ranking, matches, userBets, loggedUser, handleOpenM
 // ═══════════════════════════════════════════════════════════════════════════════
 // EXPORTAÇÃO PRINCIPAL — escolhe o modo
 // ═══════════════════════════════════════════════════════════════════════════════
-export function DashboardTab({ ranking, matches, userBets, loggedUser, handleOpenModal, setActiveTab, setShowLoginModal }) {
+export function DashboardTab({ ranking, matches, userBets, loggedUser, handleOpenModal, setActiveTab, setShowLoginModal, API_URL, accessToken }) {
   if (loggedUser) {
     return (
       <PersonalDashboard
@@ -715,6 +923,8 @@ export function DashboardTab({ ranking, matches, userBets, loggedUser, handleOpe
         loggedUser={loggedUser}
         handleOpenModal={handleOpenModal}
         setActiveTab={setActiveTab}
+        API_URL={API_URL}
+        accessToken={accessToken}
       />
     );
   }

@@ -7,21 +7,24 @@
 ![MySQL](https://img.shields.io/badge/MySQL-005C84?style=for-the-badge&logo=mysql&logoColor=white)
 
 Uma plataforma completa, moderna e gamificada de bolão para a Copa do Mundo de 2026. 
-Projetada com uma arquitetura robusta dividida entre um backend em **Python/Django REST Framework** e um frontend ultrarrápido em **React + Vite**. O design utiliza a estética *Dark Mode* com destaques em Verde Neon, proporcionando uma experiência de usuário (UX) premium e imersiva.
+Projetada com uma arquitetura robusta dividida entre um backend em **Python/Django REST Framework** e um frontend ultrarrápido em **React + Vite**. O design utiliza a estética *Dark Mode* com destaques em Verde Neon, proporcionando uma experiência de usuário (UX) premium, envolvente e altamente competitiva.
 
 ---
 
 ## ✨ Principais Funcionalidades
 
 * **Autenticação Segura (JWT):** Sistema robusto de login e cadastro com tokens JWT.
-* **Meu Perfil:** Gerenciamento de conta completo, permitindo edição de nome, sobrenome, email e alteração de senha inteligente (com interface otimizada).
+* **Meu Perfil:** Gerenciamento de conta completo, permitindo edição de nome, sobrenome, email e alteração de senha inteligente.
 * **Navegação Dinâmica & Filtros:** Abas inteligentes na tela principal separando os jogos em "Todos", "Faltam Palpitar" e "Encerrados", para o usuário nunca perder um prazo.
-* **Feedback Visual e Gamificação:**
-  * Indicadores **"🔴 AO VIVO"** pulsantes para jogos em andamento.
-  * Pódio no Ranking com exibição de medalhas (🥇, 🥈, 🥉).
-  * Selo dourado animado **"🎯 Mitou!"** quando o usuário acerta o placar exato (5 pontos).
-* **Painel de Jogos e Grupos:** Visualização completa da tabela de jogos com suas respectivas bandeiras, organizados da fase de grupos (A ao L) até a fase final.
-* **Sincronização de Dados:** Motor pronto para alimentar o banco de dados via script JSON e preparado para receber integração com APIs de esportes no futuro.
+* **Painel de Juiz (Admin Panel):** Área exclusiva para administradores lançarem placares oficiais e corrigirem palpites pelo frontend, sem precisar abrir o painel do Django.
+* **Dashboard Gamificado & Interativo:**
+  * **Secador do Líder 👀:** Ferramenta que compara automaticamente o seu palpite do próximo jogo com o palpite do líder do ranking.
+  * **Pódio 3D Animado:** O Top 3 do ranking possui destaque visual e coroação animada.
+  * **Estatísticas e Gráficos:** *Donut Charts* para ilustrar a Precisão do Jogador (Cravadas vs Erros) e a Tendência Global da Copa (Mandantes vs Visitantes).
+  * **Medalhas / Badges de *Streak*:** Indicadores visuais que mostram se o jogador está "🔥 Em Chamas" ou "🥶 Gelado" baseados no seu histórico recente.
+  * **A Maior Goleada:** Extração dinâmica da partida mais emocionante do torneio.
+  * **Banners de Urgência:** Alerta dinâmico e pulsante de jogos que ocorrem em menos de 12 horas e ainda estão sem palpites.
+* **Feedback Visual Instantâneo:** Selo dourado animado **"🎯 Mitou!"** quando o usuário acerta o placar exato (5 pontos) e alertas pulsantes **"🔴 AO VIVO"** para jogos em andamento.
 
 ---
 
@@ -29,25 +32,25 @@ Projetada com uma arquitetura robusta dividida entre um backend em **Python/Djan
 
 ### Frontend (Aplicação Web)
 * **React 18** (com Vite para build ultrarrápido)
-* **Tailwind CSS** (estilização utilitária e responsiva)
+* **Tailwind CSS** (estilização utilitária e responsiva avançada)
 * **Context API & Custom Hooks** (para gerenciamento de estados, autenticação e rotas)
 
 ### Backend (API RESTful)
 * **Python & Django** (ORM, validações e painel de administração nativo)
 * **Django REST Framework (DRF)** (Construção da API)
-* **Simple JWT** (Segurança)
+* **Simple JWT** (Segurança via Tokens)
 
 ### Banco de Dados & Infraestrutura
 * **MySQL** via Aiven (Produção) / SQLite (Desenvolvimento)
 * **Render** (Hospedagem do Backend em nuvem)
 * **Vercel** (Hospedagem do Frontend web)
-* **Docker & Docker Compose** (Ambiente de desenvolvimento)
+* **Docker & Docker Compose** (Ambiente de desenvolvimento local simplificado)
 
 ---
 
 ## ⚙️ Como Executar Localmente
 
-Certifique-se de ter o **Python**, **Node.js** e **Git** instalados. (Se preferir usar Docker, o arquivo docker-compose também está disponível).
+Certifique-se de ter o **Python**, **Node.js** e **Git** instalados. Se preferir usar Docker, as instruções do `docker-compose` também estão listadas abaixo.
 
 **1. Clone o repositório**
 ```bash
@@ -55,28 +58,42 @@ git clone https://github.com/DayvysonAlmeida/bolao-copa-2026.git
 cd bolao-copa-2026
 ```
 
-**2. Suba o ambiente completo (Backend, Frontend e Banco de Dados)**
+### 🐳 Opção 1: Usando Docker (Recomendado)
+**Suba o ambiente completo (Backend, Frontend e Banco de Dados)**
 ```bash
 docker-compose up --build -d
 ```
-*Este comando único irá baixar o Node, Python e MySQL e ligar todos os serviços.*
-
-**3. Prepare o banco de dados (Apenas na primeira execução)**
+*Após subir os contêineres, rode as migrações e popule o banco:*
 ```bash
-# Rode as migrações do Django
 docker-compose exec backend python manage.py migrate
-
-# Sincronize os dados da Copa de 2026 (Times e Partidas)
 docker-compose exec backend python manage.py sync_copa
-
-# Crie um superusuário para acessar o painel Admin
 docker-compose exec backend python manage.py createsuperuser
+```
+
+### 💻 Opção 2: Manual (Ambiente Virtual + Node)
+**Subindo o Backend:**
+```bash
+cd backend
+python -m venv venv
+# No Windows: venv\Scripts\activate | No Linux/Mac: source venv/bin/activate
+pip install -r requirements.txt
+python manage.py migrate
+python manage.py sync_copa
+python manage.py createsuperuser
+python manage.py runserver
+```
+
+**Subindo o Frontend:**
+```bash
+cd frontend
+npm install
+npm run dev
 ```
 
 **4. Acesse a Aplicação**
 * **Frontend (App):** `http://localhost:5173`
 * **Backend API:** `http://localhost:8000/api/`
-* **Admin:** `http://localhost:8000/admin/`
+* **Admin do Django:** `http://localhost:8000/admin/`
 
 ---
 
@@ -84,4 +101,4 @@ docker-compose exec backend python manage.py createsuperuser
 
 **Dayvyson Fernando Almeida da Silva (DayFer)** 💚
 
-Projeto construído com paixão para aprofundamento em arquitetura Full-Stack, UX Design e deploy na nuvem.
+Projeto construído com paixão para aprofundamento em arquitetura Full-Stack, UX Design, Gamificação e deploy na nuvem.
