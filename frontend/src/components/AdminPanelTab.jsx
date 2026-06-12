@@ -178,7 +178,7 @@ export function AdminPanelTab({ matches, users, API_URL, accessToken, onSuccess 
                     <optgroup label="🔴 SEM PALPITE">
                       {sortedMatches.filter(m => m && !userBets.some(b => b.match === m.id)).map(m => (
                         <option key={m.id} value={m.id}>
-                          {m?.home_team?.name} x {m?.away_team?.name} ({new Date(m?.match_date || 0).toLocaleDateString('pt-BR')})
+                          {m.home_team_name} x {m.away_team_name} ({new Date(m?.match_date || 0).toLocaleDateString('pt-BR')})
                         </option>
                       ))}
                     </optgroup>
@@ -187,7 +187,7 @@ export function AdminPanelTab({ matches, users, API_URL, accessToken, onSuccess 
                         const bet = userBets.find(b => b.match === m.id);
                         return (
                           <option key={m.id} value={m.id}>
-                            {m?.home_team?.name} x {m?.away_team?.name} (Placar: {bet?.home_score}x{bet?.away_score})
+                            {m.home_team_name} x {m.away_team_name} (Placar: {bet?.home_score}x{bet?.away_score})
                           </option>
                         );
                       })}
@@ -197,7 +197,7 @@ export function AdminPanelTab({ matches, users, API_URL, accessToken, onSuccess 
                   <optgroup label="Selecione um usuário primeiro">
                     {sortedMatches.filter(m => m).map(m => (
                       <option key={m.id} value={m.id}>
-                        {m?.home_team?.name} x {m?.away_team?.name} ({new Date(m?.match_date || 0).toLocaleDateString('pt-BR')})
+                        {m.home_team_name} x {m.away_team_name} ({new Date(m?.match_date || 0).toLocaleDateString('pt-BR')})
                       </option>
                     ))}
                   </optgroup>
