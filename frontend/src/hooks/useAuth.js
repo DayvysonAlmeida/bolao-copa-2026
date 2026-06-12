@@ -199,6 +199,7 @@ export function useAuth(API_URL, fetchUserBets) {
     regConfirmPassword, setRegConfirmPassword,
     registerError, setRegisterError,
     isLoggedIn,
+    isAdmin: loggedUser?.is_staff || loggedUser?.is_superuser || false,
     handleLoginSubmit,
     handleRegisterSubmit,
     handleLogout
