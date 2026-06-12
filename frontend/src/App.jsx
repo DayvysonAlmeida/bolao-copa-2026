@@ -9,6 +9,7 @@ import { BetModal } from './components/BetModal';
 import { LoginModal } from './components/LoginModal';
 import { RegisterModal } from './components/RegisterModal';
 import { ProfileModal } from './components/ProfileModal';
+import { AdminPanelTab } from './components/AdminPanelTab';
 
 function App() {
   const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
@@ -34,7 +35,7 @@ function App() {
     regPassword, setRegPassword,
     regConfirmPassword, setRegConfirmPassword,
     registerError, setRegisterError,
-    isLoggedIn,
+    isLoggedIn, isAdmin,
     handleLoginSubmit,
     handleRegisterSubmit,
     handleLogout
@@ -205,6 +206,18 @@ function App() {
         >
           🏆 Ranking
         </button>
+        {isAdmin && (
+          <button 
+            onClick={() => setActiveTab('admin')}
+            className={`px-5 py-2.5 rounded-full font-bold transition-all text-sm ${
+              activeTab === 'admin' 
+              ? 'bg-yellow-400 text-dark-900 shadow-[0_0_15px_rgba(250,204,21,0.4)]' 
+              : 'bg-dark-800 text-yellow-500/70 hover:text-yellow-400 hover:bg-dark-700'
+            }`}
+          >
+            ⚖️ Área do Juiz
+          </button>
+        )}
       </nav>
 
       {isLoading && activeTab === 'matches' && (
@@ -254,6 +267,20 @@ function App() {
           setShowRegisterModal={setShowRegisterModal} 
           setShowLoginModal={setShowLoginModal} 
           betChangeDeadlineLabel={betChangeDeadlineLabel} 
+        />
+      )}
+
+      {activeTab === 'admin' && isAdmin && (
+        <AdminPanelTab 
+          matches={matches} 
+          users={ranking} 
+          API_URL={API_URL} 
+          accessToken={accessToken} 
+          onSuccess={() => {
+            // Recarrega jogos e ranking após lançar palpite
+            fetch(`${API_URL}/matches/`).then(r => r.json()).then(setMatches);
+            fetch(`${API_URL}/ranking/`).then(r => r.json()).then(setRanking);
+          }}
         />
       )}
 

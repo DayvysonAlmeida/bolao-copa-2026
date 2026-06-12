@@ -1,4 +1,5 @@
 from rest_framework import viewsets, generics
+from rest_framework.exceptions import ValidationError
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -14,9 +15,36 @@ from django.db.models.functions import Coalesce
 class BetViewSet(viewsets.ModelViewSet):
     queryset = Bet.objects.all()
     serializer_class = BetSerializer
+    permission_classes = [IsAuthenticated]
     
-    # Dica de ouro: Mais para frente, podemos adicionar aqui uma validação 
-    # para impedir que o usuário altere o palpite se o jogo já tiver começado!
+    def perform_create(self, serializer):
+        user = self.request.user
+        match = serializer.validated_data.get('match')
+        
+        # Bloqueia apostas em jogos que já começaram ou terminaram
+        if match and match.status != 'PENDING' and not user.is_staff:
+            raise ValidationError("Apostas encerradas para este jogo.")
+
+        if user.is_staff:
+            # O admin pode mandar o usuário no JSON. Se não mandar, usa ele mesmo.
+            serializer.save()
+        else:
+            # Força o usuário a ser quem está logado
+            serializer.save(user=user)
+
+    def perform_update(self, serializer):
+        user = self.request.user
+        bet = self.get_object()
+        
+        # Se for um usuário normal tentando editar o palpite de outra pessoa
+        if not user.is_staff and bet.user != user:
+            raise ValidationError("Você não tem permissão para alterar este palpite.")
+            
+        # Bloqueia alteração se o jogo já começou
+        if bet.match.status != 'PENDING' and not user.is_staff:
+            raise ValidationError("Apostas encerradas para este jogo.")
+            
+        serializer.save()
 
 class MyBetsListView(generics.ListAPIView):
     serializer_class = BetSerializer

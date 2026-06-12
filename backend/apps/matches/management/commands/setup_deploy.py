@@ -10,8 +10,8 @@ class Command(BaseCommand):
         self.stdout.write(self.style.WARNING("1. Rodando migrações do banco de dados..."))
         call_command('migrate')
 
-        self.stdout.write(self.style.WARNING("2. Sincronizando dados da Copa..."))
-        call_command('sync_copa')
+        # self.stdout.write(self.style.WARNING("2. Sincronizando dados da Copa..."))
+        # call_command('sync_copa')
 
         self.stdout.write(self.style.WARNING("3. Configurando usuário administrador..."))
         User = get_user_model()
