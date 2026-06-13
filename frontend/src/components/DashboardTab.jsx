@@ -155,7 +155,7 @@ function PublicDashboard({ ranking, matches, setActiveTab, setShowLoginModal }) 
   const finishedMatchesAll = matches.filter(m => m.status === 'FINISHED')
     .sort((a, b) => new Date(b.match_date) - new Date(a.match_date));
   const finishedMatches = finishedMatchesAll.slice(0, 5);
-  const upcomingMatches = matches.filter(m => m.status === 'SCHEDULED')
+  const upcomingMatches = matches.filter(m => m.status === 'PENDING')
     .sort((a, b) => new Date(a.match_date) - new Date(b.match_date))
     .slice(0, 4);
 
@@ -488,9 +488,9 @@ function PersonalDashboard({ ranking, matches, userBets, loggedUser, handleOpenM
   }
 
   // Fetch Secador do Líder
+  const leaderId = top5[0]?.id;
   useEffect(() => {
-    if (!isLeader && API_URL && accessToken && top5.length > 0) {
-      const leaderId = top5[0].id;
+    if (!isLeader && API_URL && accessToken && leaderId) {
       fetch(`${API_URL}/bets/`, {
         headers: { 'Authorization': `Bearer ${accessToken}` }
       })
@@ -501,7 +501,7 @@ function PersonalDashboard({ ranking, matches, userBets, loggedUser, handleOpenM
       })
       .catch(console.error);
     }
-  }, [isLeader, API_URL, accessToken, top5]);
+  }, [isLeader, API_URL, accessToken, leaderId]);
 
   // Jogos ao vivo com meu palpite
   const liveMatches = matches.filter(m => m.status === 'IN_PROGRESS');
@@ -514,7 +514,7 @@ function PersonalDashboard({ ranking, matches, userBets, loggedUser, handleOpenM
 
   // Próximos sem palpite
   const nextWithoutBet = matches
-    .filter(m => m.status === 'SCHEDULED' && !userBets.find(b => b.match === m.id))
+    .filter(m => m.status === 'PENDING' && !userBets.find(b => b.match === m.id))
     .sort((a, b) => new Date(a.match_date) - new Date(b.match_date))
     .slice(0, 3);
 
@@ -527,7 +527,7 @@ function PersonalDashboard({ ranking, matches, userBets, loggedUser, handleOpenM
 
   // Próximos com palpite
   const nextWithBet = matches
-    .filter(m => m.status === 'SCHEDULED' && userBets.find(b => b.match === m.id))
+    .filter(m => m.status === 'PENDING' && userBets.find(b => b.match === m.id))
     .sort((a, b) => new Date(a.match_date) - new Date(b.match_date))
     .slice(0, 3);
 
