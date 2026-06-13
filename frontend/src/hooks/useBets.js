@@ -22,7 +22,7 @@ export function useBets(API_URL, accessToken, loggedUser, setShowLoginModal, set
       });
       const data = await response.json();
       if (response.ok) {
-        setUserBets(Array.isArray(data) ? data : []);
+        setUserBets(Array.isArray(data) ? data : (data.results || []));
       } else {
         console.error('Falha ao buscar meus palpites:', data);
       }
