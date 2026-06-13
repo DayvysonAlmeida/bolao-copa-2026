@@ -35,7 +35,7 @@ function App() {
     regPassword, setRegPassword,
     regConfirmPassword, setRegConfirmPassword,
     registerError, setRegisterError,
-    isLoggedIn, isAdmin,
+    isLoggedIn, isLoggingIn, isAdmin,
     handleLoginSubmit,
     handleRegisterSubmit,
     handleLogout
@@ -66,7 +66,11 @@ function App() {
   useEffect(() => {
     setIsLoading(true);
     fetch(`${API_URL}/matches/`)
-      .then(response => response.json())
+      .then(async (response) => {
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        const data = await response.json();
+        return Array.isArray(data) ? data : (data.results || []);
+      })
       .then(data => {
         setMatches(data);
         setIsLoading(false);
@@ -80,7 +84,11 @@ function App() {
   useEffect(() => {
     if (activeTab === 'ranking' || activeTab === 'dashboard') {
       fetch(`${API_URL}/ranking/`)
-        .then(response => response.json())
+        .then(async (response) => {
+          if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+          const data = await response.json();
+          return Array.isArray(data) ? data : (data.results || []);
+        })
         .then(data => setRanking(data))
         .catch(error => console.error("Erro ao buscar ranking:", error));
     }
@@ -90,25 +98,33 @@ function App() {
   useEffect(() => {
     const fetchLiveUpdates = () => {
       fetch(`${API_URL}/matches/`)
-        .then(res => res.json())
+        .then(async (res) => {
+          if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+          const data = await res.json();
+          return Array.isArray(data) ? data : (data.results || []);
+        })
         .then(data => setMatches(data))
         .catch(err => console.error("Erro ao atualizar jogos:", err));
 
       if (activeTab === 'ranking' || activeTab === 'dashboard') {
         fetch(`${API_URL}/ranking/`)
-          .then(res => res.json())
+          .then(async (res) => {
+            if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+            const data = await res.json();
+            return Array.isArray(data) ? data : (data.results || []);
+          })
           .then(data => setRanking(data))
           .catch(err => console.error("Erro ao atualizar ranking:", err));
       }
 
-      if (isLoggedIn) {
-        fetchUserBets();
+      if (isLoggedIn && accessToken) {
+        fetchUserBets(accessToken);
       }
     };
 
     const intervalId = setInterval(fetchLiveUpdates, 60000); // 60 segundos
     return () => clearInterval(intervalId);
-  }, [API_URL, activeTab, isLoggedIn, fetchUserBets]);
+  }, [API_URL, activeTab, isLoggedIn, accessToken, fetchUserBets]);
 
   return (
     <div className="min-h-screen bg-dark-900 text-gray-100 p-8 pb-20 relative">
@@ -298,6 +314,7 @@ function App() {
         setPasswordInput={setPasswordInput} 
         loginError={loginError} 
         setShowRegisterModal={setShowRegisterModal} 
+        isLoggingIn={isLoggingIn}
       />
 
       <RegisterModal 
