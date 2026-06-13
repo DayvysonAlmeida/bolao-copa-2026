@@ -272,7 +272,7 @@ function PublicDashboard({ ranking, matches, setActiveTab, setShowLoginModal }) 
           {maxGoalsMatch && maxGoals > 0 && (
             <div className="bg-dark-800 border border-dark-700 rounded-2xl p-4 bg-gradient-to-br from-dark-800 to-purple-900/10">
               <h3 className="font-bold text-purple-400 text-xs uppercase tracking-wider mb-3">🔥 Jogo Mais Emocionante</h3>
-              <MatchRow match={maxGoalsMatch} onClick={() => {}} />
+              <MatchRow match={maxGoalsMatch} onClick={() => { }} />
             </div>
           )}
 
@@ -284,7 +284,7 @@ function PublicDashboard({ ranking, matches, setActiveTab, setShowLoginModal }) 
                 <h3 className="font-bold text-red-400 text-sm uppercase tracking-wider">Ao Vivo Agora</h3>
               </div>
               <div className="flex flex-col gap-2">
-                {liveMatches.map(m => <MatchRow key={m.id} match={m} onClick={() => {}} />)}
+                {liveMatches.map(m => <MatchRow key={m.id} match={m} onClick={() => { }} />)}
               </div>
             </div>
           )}
@@ -299,7 +299,7 @@ function PublicDashboard({ ranking, matches, setActiveTab, setShowLoginModal }) 
               <p className="text-center text-gray-500 text-sm py-8">Nenhum jogo encerrado ainda.</p>
             ) : (
               <div className="flex flex-col gap-2">
-                {finishedMatches.map(m => <MatchRow key={m.id} match={m} onClick={() => {}} />)}
+                {finishedMatches.map(m => <MatchRow key={m.id} match={m} onClick={() => { }} />)}
               </div>
             )}
           </div>
@@ -431,7 +431,7 @@ function PublicDashboard({ ranking, matches, setActiveTab, setShowLoginModal }) 
               <p className="text-center text-gray-500 text-sm py-6">Nenhum jogo agendado.</p>
             ) : (
               <div className="flex flex-col gap-2">
-                {upcomingMatches.map(m => <MatchRow key={m.id} match={m} onClick={() => {}} />)}
+                {upcomingMatches.map(m => <MatchRow key={m.id} match={m} onClick={() => { }} />)}
               </div>
             )}
           </div>
@@ -473,7 +473,7 @@ function PersonalDashboard({ ranking, matches, userBets, loggedUser, handleOpenM
   const myFinishedBets = userBets
     .filter(b => matches.find(m => m.id === b.match)?.status === 'FINISHED')
     .sort((a, b) => new Date(matches.find(m => m.id === a.match).match_date) - new Date(matches.find(m => m.id === b.match).match_date));
-  
+
   let streakBadge = null;
   if (myFinishedBets.length >= 2) {
     const last2 = myFinishedBets.slice(-2);
@@ -494,12 +494,12 @@ function PersonalDashboard({ ranking, matches, userBets, loggedUser, handleOpenM
       fetch(`${API_URL}/bets/`, {
         headers: { 'Authorization': `Bearer ${accessToken}` }
       })
-      .then(r => r.json())
-      .then(data => {
-        const betsArray = Array.isArray(data) ? data : (data.results || []);
-        setLeaderBets(betsArray.filter(b => b.user === leaderId));
-      })
-      .catch(console.error);
+        .then(r => r.json())
+        .then(data => {
+          const betsArray = Array.isArray(data) ? data : (data.results || []);
+          setLeaderBets(betsArray.filter(b => b.user === leaderId));
+        })
+        .catch(console.error);
     }
   }, [isLeader, API_URL, accessToken, leaderId]);
 
@@ -532,13 +532,13 @@ function PersonalDashboard({ ranking, matches, userBets, loggedUser, handleOpenM
     .slice(0, 3);
 
   // Gráfico de evolução top 3 + eu
-  const chartLabels = ['R1','R2','R3','R4','R5','R6','R7','R8'];
+  const chartLabels = ['R1', 'R2', 'R3', 'R4', 'R5', 'R6', 'R7', 'R8'];
   const top3 = ranking.slice(0, 3);
   const seriesRaw = top3.length > 0 ? top3.map((u, i) => ({
     name: u.id === loggedUser.id ? 'Você' : (u.first_name || u.username),
     isMe: u.id === loggedUser.id,
     data: chartLabels.map((_, j) => Math.round(u.total_points * ((j + 1) / chartLabels.length) * (0.88 + (i * 0.04))))
-  })) : [{ name: 'Você', isMe: true, data: [0,0,0,0,0,0,0,myPoints] }];
+  })) : [{ name: 'Você', isMe: true, data: [0, 0, 0, 0, 0, 0, 0, myPoints] }];
 
   // Distribuição geral de palpites por resultado
   const groups = [...new Set(matches.map(m => m.group).filter(Boolean))].sort();
@@ -548,7 +548,7 @@ function PersonalDashboard({ ranking, matches, userBets, loggedUser, handleOpenM
     const teams = {};
     groupMatchesDone.forEach(m => {
       [[m.home_team_name, m.flag_home, m.home_score, m.away_score],
-       [m.away_team_name, m.flag_away, m.away_score, m.home_score]].forEach(([name, flag, gp, gc]) => {
+      [m.away_team_name, m.flag_away, m.away_score, m.home_score]].forEach(([name, flag, gp, gc]) => {
         if (!teams[name]) teams[name] = { flag, J: 0, V: 0, E: 0, D: 0, GP: 0, GC: 0, PTS: 0 };
         teams[name].J++; teams[name].GP += gp; teams[name].GC += gc;
       });
@@ -565,8 +565,8 @@ function PersonalDashboard({ ranking, matches, userBets, loggedUser, handleOpenM
   return (
     <div className="max-w-[1400px] mx-auto animate-fadeIn space-y-4">
 
-      {/* ── Banner de Urgência ──────────────────────────────────────── */}
-      {urgentMatches.length > 0 && (
+      {/* ── Banner de Urgência (Comentado) ──────────────────────────────────────── */}
+      {/* {urgentMatches.length > 0 && (
         <div className="bg-gradient-to-r from-red-600/90 to-orange-500/90 border border-red-400 rounded-2xl p-4 flex items-center justify-between shadow-[0_0_20px_rgba(239,68,68,0.3)] animate-[pulse_2s_ease-in-out_infinite]">
           <div className="flex items-center gap-3">
             <span className="text-3xl">⚠️</span>
@@ -579,7 +579,7 @@ function PersonalDashboard({ ranking, matches, userBets, loggedUser, handleOpenM
             Resolver Agora
           </button>
         </div>
-      )}
+      )} */}
 
       {/* ── Header personalizado ──────────────────────────────────────── */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
@@ -619,7 +619,7 @@ function PersonalDashboard({ ranking, matches, userBets, loggedUser, handleOpenM
         <StatCard icon="🎯" label="Cravadas" value={exactBets} sub="+5 pts" color="blue" />
         <StatCard icon="✅" label="Acertos" value={winnerBets} sub="+3 pts" color="neon-green" />
         <StatCard icon="📊" label="Hit Rate" value={`${hitRate}%`} sub={`${totalBets} palpites`} color={hitRate >= 50 ? 'neon-green' : hitRate >= 30 ? 'yellow' : 'red'} highlight />
-        
+
         {/* Gráfico Circular de Precisão */}
         <div className="rounded-2xl border border-dark-700 bg-dark-800 p-3 flex items-center gap-3 relative overflow-hidden">
           <div className="absolute top-0 right-0 p-1 opacity-20"><span className="text-4xl">🎯</span></div>
@@ -681,10 +681,10 @@ function PersonalDashboard({ ranking, matches, userBets, loggedUser, handleOpenM
       )}
 
       {/* ── Linha central ─────────────────────────────────────────────── */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+      <div className="flex flex-col lg:flex-row lg:flex-wrap xl:flex-nowrap gap-4">
 
         {/* Meus últimos resultados */}
-        <div className="lg:col-span-3 bg-dark-800 border border-dark-700 rounded-2xl p-4">
+        <div className="flex-1 min-w-[280px] bg-dark-800 border border-dark-700 rounded-2xl p-4">
           <div className="flex items-center justify-between mb-3">
             <h3 className="font-bold text-white text-sm uppercase tracking-wider">📋 Histórico</h3>
             <button onClick={() => setActiveTab('my-bets')} className="text-xs text-neon-green hover:underline">Ver todos →</button>
@@ -724,14 +724,14 @@ function PersonalDashboard({ ranking, matches, userBets, loggedUser, handleOpenM
         </div>
 
         {/* Gráfico de evolução */}
-        <div className="lg:col-span-4 bg-dark-800 border border-dark-700 rounded-2xl p-4">
+        <div className="flex-1 min-w-[280px] bg-dark-800 border border-dark-700 rounded-2xl p-4">
           <div className="flex items-center justify-between mb-2">
             <h3 className="font-bold text-white text-sm uppercase tracking-wider">📈 Evolução de Pontos</h3>
           </div>
           <div className="flex flex-wrap gap-3 mb-2">
             {seriesRaw.map((s, i) => (
               <div key={i} className="flex items-center gap-1.5">
-                <div className="w-2.5 h-2.5 rounded-full" style={{ background: ['#04d361','#3b82f6','#eab308'][i] }} />
+                <div className="w-2.5 h-2.5 rounded-full" style={{ background: ['#04d361', '#3b82f6', '#eab308'][i] }} />
                 <span className={`text-[10px] ${s.isMe ? 'text-neon-green font-bold' : 'text-gray-400'}`}>{s.name}</span>
               </div>
             ))}
@@ -743,7 +743,7 @@ function PersonalDashboard({ ranking, matches, userBets, loggedUser, handleOpenM
 
         {/* Secador do Líder */}
         {!isLeader && nextWithBet.length > 0 && top5.length > 0 && (
-          <div className="lg:col-span-5 bg-dark-800 border border-blue-500/20 rounded-2xl p-4 bg-gradient-to-br from-dark-800 to-blue-900/10">
+          <div className="flex-1 min-w-[280px] bg-dark-800 border border-blue-500/20 rounded-2xl p-4 bg-gradient-to-br from-dark-800 to-blue-900/10">
             <div className="flex items-center gap-2 mb-4">
               <span className="text-lg">👀</span>
               <h3 className="font-bold text-blue-400 text-sm uppercase tracking-wider">Secador do Líder</h3>
@@ -755,9 +755,9 @@ function PersonalDashboard({ ranking, matches, userBets, loggedUser, handleOpenM
               return (
                 <div className="flex flex-col gap-3">
                   <div className="flex items-center justify-center gap-2 mb-2">
-                    {nextM.flag_home && <img src={nextM.flag_home} className="w-5 h-3 object-cover rounded-sm" alt=""/>}
+                    {nextM.flag_home && <img src={nextM.flag_home} className="w-5 h-3 object-cover rounded-sm" alt="" />}
                     <span className="text-xs text-gray-400 font-bold uppercase">{nextM.home_team_name} x {nextM.away_team_name}</span>
-                    {nextM.flag_away && <img src={nextM.flag_away} className="w-5 h-3 object-cover rounded-sm" alt=""/>}
+                    {nextM.flag_away && <img src={nextM.flag_away} className="w-5 h-3 object-cover rounded-sm" alt="" />}
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="border border-neon-green/30 bg-neon-green/5 rounded-xl p-3 text-center">
@@ -786,17 +786,17 @@ function PersonalDashboard({ ranking, matches, userBets, loggedUser, handleOpenM
         )}
 
         {isLeader && (
-           <div className="lg:col-span-5 bg-dark-800 border border-yellow-500/20 rounded-2xl p-4 flex items-center justify-center bg-gradient-to-br from-dark-800 to-yellow-900/10">
-             <div className="text-center">
-               <div className="text-5xl mb-3 animate-bounce">👑</div>
-               <h3 className="font-black text-yellow-400 text-lg uppercase tracking-wider">Você é o Líder!</h3>
-               <p className="text-gray-400 text-xs mt-1 max-w-[200px] mx-auto">Todos estão tentando alcançar você. Mantenha os acertos para garantir a taça!</p>
-             </div>
-           </div>
+          <div className="flex-1 min-w-[280px] bg-dark-800 border border-yellow-500/20 rounded-2xl p-4 flex items-center justify-center bg-gradient-to-br from-dark-800 to-yellow-900/10">
+            <div className="text-center">
+              <div className="text-5xl mb-3 animate-bounce">👑</div>
+              <h3 className="font-black text-yellow-400 text-lg uppercase tracking-wider">Você é o Líder!</h3>
+              <p className="text-gray-400 text-xs mt-1 max-w-[200px] mx-auto">Todos estão tentando alcançar você. Mantenha os acertos para garantir a taça!</p>
+            </div>
+          </div>
         )}
 
         {/* Ranking top 5 com destaque pessoal */}
-        <div className="lg:col-span-3 bg-dark-800 border border-dark-700 rounded-2xl p-4">
+        <div className="flex-1 min-w-[280px] bg-dark-800 border border-dark-700 rounded-2xl p-4">
           <div className="flex items-center justify-between mb-3">
             <h3 className="font-bold text-white text-sm uppercase tracking-wider">🏆 Ranking</h3>
             <button onClick={() => setActiveTab('ranking')} className="text-xs text-neon-green hover:underline">Ver completo →</button>
@@ -807,13 +807,13 @@ function PersonalDashboard({ ranking, matches, userBets, loggedUser, handleOpenM
             <div className="flex flex-col gap-1">
               {top5.map((u, i) => {
                 const isMe = u.id === loggedUser.id;
-                const medals = ['🥇','🥈','🥉'];
+                const medals = ['🥇', '🥈', '🥉'];
                 const name = u.first_name ? `${u.first_name} ${u.last_name || ''}`.trim() : u.username;
                 return (
                   <div key={u.id} className={`flex items-center gap-2 px-2 py-2 rounded-xl transition-all
                     ${isMe ? 'bg-neon-green/10 border border-neon-green/30' : 'hover:bg-dark-700'}`}>
                     <span className="w-6 text-center text-base flex-shrink-0">
-                      {i < 3 ? medals[i] : <span className="text-xs text-gray-500 font-bold">{i+1}º</span>}
+                      {i < 3 ? medals[i] : <span className="text-xs text-gray-500 font-bold">{i + 1}º</span>}
                     </span>
                     <span className={`flex-1 text-sm font-semibold truncate ${isMe ? 'text-neon-green' : 'text-white'}`}>{name}</span>
                     <span className={`text-sm font-black flex-shrink-0 ${isMe ? 'text-neon-green' : 'text-white'}`}>{u.total_points}<span className="text-xs text-gray-500 font-normal">pts</span></span>
@@ -825,7 +825,7 @@ function PersonalDashboard({ ranking, matches, userBets, loggedUser, handleOpenM
                 <>
                   <div className="text-center text-gray-600 text-xs py-1">···</div>
                   <div className="flex items-center gap-2 px-2 py-2 rounded-xl bg-neon-green/10 border border-neon-green/30">
-                    <span className="w-6 text-center text-xs text-neon-green font-black flex-shrink-0">{userRankPos+1}º</span>
+                    <span className="w-6 text-center text-xs text-neon-green font-black flex-shrink-0">{userRankPos + 1}º</span>
                     <span className="flex-1 text-sm font-semibold truncate text-neon-green">{firstName}</span>
                     <span className="text-sm font-black text-neon-green flex-shrink-0">{myPoints}<span className="text-xs text-gray-500 font-normal">pts</span></span>
                   </div>
@@ -889,7 +889,7 @@ function PersonalDashboard({ ranking, matches, userBets, loggedUser, handleOpenM
               </div>
               {groupTable.map((t, i) => (
                 <div key={t.name} className={`grid grid-cols-10 items-center px-1 py-1.5 rounded-lg mb-0.5 ${i < 2 ? 'bg-neon-green/5 border border-neon-green/10' : 'hover:bg-dark-700'}`}>
-                  <span className={`text-xs font-black ${i < 2 ? 'text-neon-green' : 'text-gray-500'}`}>{i+1}</span>
+                  <span className={`text-xs font-black ${i < 2 ? 'text-neon-green' : 'text-gray-500'}`}>{i + 1}</span>
                   <div className="col-span-3 flex items-center gap-1">
                     {t.flag && <img src={t.flag} alt="" className="w-5 h-3.5 object-cover rounded-sm flex-shrink-0" />}
                     <span className="text-xs text-gray-300 truncate">{t.name}</span>

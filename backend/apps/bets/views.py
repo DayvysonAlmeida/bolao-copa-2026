@@ -6,7 +6,9 @@ from rest_framework import status
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from .models import Bet
 from .serializers import BetSerializer, RankingSerializer, UserSerializer
+# pyrefly: ignore [missing-import]
 from django.contrib.auth.models import User
+# pyrefly: ignore [missing-import]
 from django.db.models import Sum
 from django.db.models.functions import Coalesce
 
