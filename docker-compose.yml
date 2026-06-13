@@ -11,7 +11,7 @@ services:
     ports:
       - "3307:3306"
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uadmin", "-padmin"]
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost", "-uadmin", "-padmin" ]
       interval: 10s
       timeout: 5s
       retries: 10
@@ -29,7 +29,6 @@ services:
       - DEBUG=True
       - SECRET_KEY=django-insecure-docker-dev-key-apenas-local-nao-usar-em-prod
       - FRONTEND_URL=*
-      - API_SPORTS_KEY=7fd5753baf1aa6e71ed9ea1f812bbbfc
     depends_on:
       db:
         condition: service_healthy

@@ -9,7 +9,7 @@ export function MyBetsTab({ userBets, matches, loggedUser, handleOpenModal, setS
           </div>
           {!loggedUser && (
             <div className="flex gap-2">
-              <button onClick={() => setShowRegisterModal(true)} className="rounded-full bg-dark-700 border border-dark-600 px-4 py-2 text-white font-semibold hover:bg-dark-600 transition-all hidden sm:block">Criar Conta</button>
+              {/* <button onClick={() => setShowRegisterModal(true)} className="rounded-full bg-dark-700 border border-dark-600 px-4 py-2 text-white font-semibold hover:bg-dark-600 transition-all hidden sm:block">Criar Conta</button> */}
               <button onClick={() => setShowLoginModal(true)} className="rounded-full bg-neon-green px-4 py-2 text-dark-900 font-semibold hover:bg-opacity-90 transition-all">Login</button>
             </div>
           )}

@@ -49,10 +49,12 @@ export function LoginModal({
             <button type="button" onClick={() => { setShowLoginModal(false); setSelectedMatch(null); }} className="flex-1 bg-dark-700 hover:bg-dark-600 text-white font-semibold py-3 rounded-xl transition-all">Cancelar</button>
             <button type="submit" className="flex-1 bg-neon-green hover:bg-opacity-90 text-dark-900 font-bold py-3 rounded-xl transition-all shadow-lg shadow-neon-green/20">Entrar</button>
           </div>
-          <div className="text-center mt-4">
+          {/* <div className="mt-4 text-center">
             <span className="text-sm text-gray-400">Não tem conta? </span>
-            <button type="button" onClick={() => { setShowLoginModal(false); setShowRegisterModal(true); }} className="text-sm text-neon-green font-semibold hover:underline">Cadastre-se</button>
-          </div>
+            <button type="button" onClick={() => { setShowLoginModal(false); setShowRegisterModal(true); }} className="text-sm font-semibold text-neon-green hover:underline">
+              Criar conta
+            </button>
+          </div> */}
         </form>
       </div>
     </div>
