@@ -19,6 +19,7 @@ export function useAuth(API_URL, fetchUserBets) {
   const [regPassword, setRegPassword] = useState('');
   const [regConfirmPassword, setRegConfirmPassword] = useState('');
   const [registerError, setRegisterError] = useState('');
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
 
   const isLoggedIn = Boolean(loggedUser);
 
@@ -40,6 +41,7 @@ export function useAuth(API_URL, fetchUserBets) {
       return;
     }
 
+    setIsLoggingIn(true);
     try {
       const response = await fetch(`${API_URL}/token/`, {
         method: 'POST',
@@ -50,6 +52,7 @@ export function useAuth(API_URL, fetchUserBets) {
       const data = await response.json();
       if (!response.ok) {
         setLoginError('Usuário ou senha inválidos.');
+        setIsLoggingIn(false);
         return;
       }
 
@@ -85,6 +88,8 @@ export function useAuth(API_URL, fetchUserBets) {
     } catch (error) {
       console.error('Erro de login:', error);
       setLoginError('Erro de conexão ao autenticar.');
+    } finally {
+      setIsLoggingIn(false);
     }
   };
 
@@ -199,6 +204,7 @@ export function useAuth(API_URL, fetchUserBets) {
     regConfirmPassword, setRegConfirmPassword,
     registerError, setRegisterError,
     isLoggedIn,
+    isLoggingIn,
     isAdmin: loggedUser?.is_staff || loggedUser?.is_superuser || false,
     handleLoginSubmit,
     handleRegisterSubmit,
