@@ -1,5 +1,5 @@
 # Usa uma imagem oficial do Python, leve e rápida
-FROM python:3.11-slim
+FROM python:3.11-slim-bookworm
 
 # Impede o Python de gravar arquivos .pyc e força o log direto no terminal
 ENV PYTHONDONTWRITEBYTECODE=1
@@ -8,10 +8,7 @@ ENV PYTHONUNBUFFERED=1
 # Define a pasta de trabalho dentro do contêiner
 WORKDIR /app
 
-# Instala bibliotecas de sistema necessárias para MySQL e outros (opcional, mas recomendado no slim)
-RUN apt-get update \
-    && apt-get install -y default-libmysqlclient-dev pkg-config gcc \
-    && rm -rf /var/lib/apt/lists/*
+# Nenhuma dependência de sistema adicional é necessária pois o pymysql é Python puro
 
 # Copia o arquivo de dependências e instala tudo
 COPY requirements.txt /app/
