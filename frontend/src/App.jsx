@@ -10,6 +10,7 @@ import { LoginModal } from './components/LoginModal';
 import { RegisterModal } from './components/RegisterModal';
 import { ProfileModal } from './components/ProfileModal';
 import { AdminPanelTab } from './components/AdminPanelTab';
+import { ComparatorTab } from './components/ComparatorTab';
 
 function App() {
   const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
@@ -213,6 +214,16 @@ function App() {
           📌 Meus Palpites
         </button>
         <button 
+          onClick={() => setActiveTab('comparator')}
+          className={`px-5 py-2.5 rounded-full font-bold transition-all text-sm ${
+            activeTab === 'comparator' 
+            ? 'bg-neon-green text-dark-900 shadow-[0_0_15px_rgba(4,211,97,0.4)]' 
+            : 'bg-dark-800 text-gray-400 hover:text-white hover:bg-dark-700'
+          }`}
+        >
+          🔍 Radar
+        </button>
+        <button 
           onClick={() => setActiveTab('ranking')}
           className={`px-5 py-2.5 rounded-full font-bold transition-all text-sm ${
             activeTab === 'ranking' 
@@ -285,6 +296,16 @@ function App() {
           setShowRegisterModal={setShowRegisterModal} 
           setShowLoginModal={setShowLoginModal} 
           betChangeDeadlineLabel={betChangeDeadlineLabel} 
+        />
+      )}
+
+      {activeTab === 'comparator' && (
+        <ComparatorTab
+          matches={matches}
+          ranking={ranking}
+          loggedUser={loggedUser}
+          API_URL={API_URL}
+          accessToken={accessToken}
         />
       )}
 
