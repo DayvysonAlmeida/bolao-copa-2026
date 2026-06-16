@@ -27,12 +27,14 @@ function LineChart({ labels, series }) {
         <text key={i} x={toX(i)} y={H - 2} textAnchor="middle" fontSize="8" fill="#4b5563">{l}</text>
       ))}
       {series.map((s, si) => {
-        const pts = s.data.map((v, i) => `${toX(i)},${toY(v)}`).join(' ');
+        // Deslocamento visual (si * 2) para evitar que linhas com pontuação idêntica se sobreponham totalmente
+        const offset = si * 2;
+        const pts = s.data.map((v, i) => `${toX(i)},${toY(v) - offset}`).join(' ');
         const color = COLORS[si % COLORS.length];
         return (
           <g key={si}>
-            <polyline points={pts} fill="none" stroke={color} strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round" />
-            {s.data.map((v, i) => <circle key={i} cx={toX(i)} cy={toY(v)} r="3.5" fill={color} />)}
+            <polyline points={pts} fill="none" stroke={color} strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round" opacity="0.9" />
+            {s.data.map((v, i) => <circle key={i} cx={toX(i)} cy={toY(v) - offset} r="3.5" fill={color} stroke="#121214" strokeWidth="1.5" />)}
           </g>
         );
       })}
