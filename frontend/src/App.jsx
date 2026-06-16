@@ -128,7 +128,7 @@ function App() {
   }, [API_URL, activeTab, isLoggedIn, accessToken, fetchUserBets]);
 
   return (
-    <div className="min-h-screen bg-dark-900 text-gray-100 p-8 pb-20 relative">
+    <div className="min-h-screen bg-dark-900 text-gray-100 p-4 sm:p-6 md:p-8 pb-20 relative">
       <header className="mb-8">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div className="space-y-3 text-center sm:text-left">
