@@ -236,10 +236,22 @@ export function ComparatorTab({ matches, ranking, loggedUser, API_URL, accessTok
                         {/* Lista com scroll */}
                         <div className="flex-1 bg-dark-900/50 rounded-2xl border border-dark-700/50 overflow-hidden flex flex-col max-h-[320px]">
                             <div className="overflow-y-auto p-2.5 custom-scrollbar flex flex-col gap-1.5 h-full">
-                                {matchBets.filter(b => b.user !== loggedUser?.id).map(bet => {
-                                    const user = ranking.find(u => u.id === bet.user);
+                                {matchBets.filter(b => b.user !== loggedUser?.id).sort((a, b) => {
+                                    const rankA = ranking.findIndex(u => u.id === a.user);
+                                    const rankB = ranking.findIndex(u => u.id === b.user);
+                                    const posA = rankA === -1 ? 9999 : rankA;
+                                    const posB = rankB === -1 ? 9999 : rankB;
+                                    return posA - posB;
+                                }).map(bet => {
+                                    const userIndex = ranking.findIndex(u => u.id === bet.user);
+                                    const user = userIndex !== -1 ? ranking[userIndex] : null;
                                     const userName = user ? (user.first_name || user.username) : `Usuário ${bet.user}`;
                                     const userInitials = userName.substring(0, 2).toUpperCase();
+                                    
+                                    let medal = '';
+                                    if (userIndex === 0) medal = '🥇';
+                                    else if (userIndex === 1) medal = '🥈';
+                                    else if (userIndex === 2) medal = '🥉';
                                     
                                     // Highlight logic if match is done/live
                                     let isExact = false;
@@ -266,8 +278,15 @@ export function ComparatorTab({ matches, ranking, loggedUser, API_URL, accessTok
                                     return (
                                         <div key={bet.id} className={`flex items-center justify-between p-3 rounded-xl border transition-colors hover:bg-dark-800 ${userBorderClass}`}>
                                             <div className="flex items-center gap-3">
-                                                <div className="w-8 h-8 rounded-full bg-dark-700 flex items-center justify-center text-gray-300 font-bold text-[10px] border border-dark-600">
-                                                    {userInitials}
+                                                <div className="relative">
+                                                    <div className="w-8 h-8 rounded-full bg-dark-700 flex items-center justify-center text-gray-300 font-bold text-[10px] border border-dark-600">
+                                                        {userInitials}
+                                                    </div>
+                                                    {medal && (
+                                                        <span className="absolute -top-2 -right-2 text-[14px] drop-shadow-md">
+                                                            {medal}
+                                                        </span>
+                                                    )}
                                                 </div>
                                                 <span className="font-semibold text-gray-200 text-sm truncate max-w-[100px] sm:max-w-[180px] lg:max-w-[120px] xl:max-w-[180px]">{userName}</span>
                                                 {isExact && <span className="text-[10px] bg-yellow-400 text-yellow-950 px-2.5 py-0.5 rounded-full font-black shadow-[0_0_8px_rgba(250,204,21,0.4)]">EXATO</span>}
