@@ -66,18 +66,12 @@ export function ComparatorTab({ matches, ranking, loggedUser, API_URL, accessTok
     const finishedMatches = sortedMatches.filter(m => m.status === 'FINISHED');
     const prevMatch = finishedMatches.length > 0 ? finishedMatches[finishedMatches.length - 1] : null;
 
-    // Jogo Atual e Próximo
-    let currentMatch = sortedMatches.find(m => m.status === 'IN_PROGRESS');
-    let nextMatch = null;
+    // Jogo Atual: SOMENTE se estiver IN_PROGRESS
+    let currentMatch = sortedMatches.find(m => m.status === 'IN_PROGRESS') || null;
 
+    // Próximo Jogo: o primeiro PENDING
     const pendingMatches = sortedMatches.filter(m => m.status === 'PENDING');
-    
-    if (!currentMatch) {
-        currentMatch = pendingMatches.length > 0 ? pendingMatches[0] : null;
-        nextMatch = pendingMatches.length > 1 ? pendingMatches[1] : null;
-    } else {
-        nextMatch = pendingMatches.length > 0 ? pendingMatches[0] : null;
-    }
+    let nextMatch = pendingMatches.length > 0 ? pendingMatches[0] : null;
 
     if (!loggedUser) {
         return (
@@ -197,19 +191,47 @@ export function ComparatorTab({ matches, ranking, loggedUser, API_URL, accessTok
                         </div>
                         
                         {/* Meu palpite fixo no topo */}
-                        {myBet && (
-                            <div className="mb-3 flex items-center justify-between p-3.5 rounded-xl border-2 border-neon-green bg-neon-green/10 shadow-[0_0_15px_rgba(4,211,97,0.15)] transform hover:scale-[1.01] transition-transform">
-                                <div className="flex items-center gap-3">
-                                    <div className="w-8 h-8 rounded-full bg-neon-green flex items-center justify-center text-dark-900 font-black text-xs shadow-inner">
-                                        VO
+                        {myBet && (() => {
+                            let isExact = false;
+                            let isWinner = false;
+                            let isWrong = false;
+
+                            if (match.status === 'FINISHED' || match.status === 'IN_PROGRESS') {
+                                isExact = match.home_score === myBet.home_score && match.away_score === myBet.away_score;
+                                const homeWin = match.home_score > match.away_score;
+                                const awayWin = match.away_score > match.home_score;
+                                const betHomeWin = myBet.home_score > myBet.away_score;
+                                const betAwayWin = myBet.away_score > myBet.home_score;
+                                const betDraw = myBet.home_score === myBet.away_score;
+                                isWinner = !isExact && ((homeWin && betHomeWin) || (awayWin && betAwayWin) || (!homeWin && !awayWin && betDraw));
+                                isWrong = !isExact && !isWinner;
+                            }
+
+                            const isPlayedOrLive = match.status === 'FINISHED' || match.status === 'IN_PROGRESS';
+                            const isPending = match.status === 'PENDING';
+                            const isCurrentWrong = isWrong && isPlayedOrLive;
+                            
+                            const myBorderColor = isCurrentWrong ? 'border-red-500' : isExact ? 'border-yellow-400' : isWinner ? 'border-neon-green' : 'border-dark-700';
+                            const myBgColor = isCurrentWrong ? 'bg-red-500/10' : isExact ? 'bg-yellow-400/10' : isWinner ? 'bg-neon-green/10' : 'bg-dark-800/50';
+                            const myShadow = isCurrentWrong ? 'shadow-[0_0_15px_rgba(239,68,68,0.15)]' : isExact ? 'shadow-[0_0_15px_rgba(250,204,21,0.15)]' : isWinner ? 'shadow-[0_0_15px_rgba(4,211,97,0.15)]' : 'shadow-none';
+                            const myTextColor = isCurrentWrong ? 'text-red-500' : isExact ? 'text-yellow-400' : isWinner ? 'text-neon-green' : 'text-gray-300';
+                            const myCircleBg = isCurrentWrong ? 'bg-red-500 text-white' : isExact ? 'bg-yellow-400 text-dark-900' : isWinner ? 'bg-neon-green text-dark-900' : 'bg-dark-700 text-gray-400 border border-dark-600';
+                            const emoji = isExact ? '🎯' : (isWinner ? '✓' : (isCurrentWrong ? '❌' : '👤'));
+
+                            return (
+                                <div className={`mb-3 flex items-center justify-between p-3.5 rounded-xl border-2 ${myBorderColor} ${myBgColor} ${myShadow} transform hover:scale-[1.01] transition-transform`}>
+                                    <div className="flex items-center gap-3">
+                                        <div className={`w-8 h-8 rounded-full ${myCircleBg} flex items-center justify-center font-black text-sm shadow-inner`}>
+                                            {emoji}
+                                        </div>
+                                        <span className={`font-black text-sm uppercase tracking-wider ${isPending ? 'text-gray-400' : 'text-white'}`}>Seu Palpite</span>
                                     </div>
-                                    <span className="font-black text-white text-sm uppercase tracking-wider">Seu Palpite</span>
+                                    <span className={`text-2xl font-black ${myTextColor} tracking-widest drop-shadow-md`}>
+                                        {myBet.home_score} <span className={`${myTextColor}/50 text-xl font-medium`}>×</span> {myBet.away_score}
+                                    </span>
                                 </div>
-                                <span className="text-2xl font-black text-neon-green tracking-widest drop-shadow-md">
-                                    {myBet.home_score} <span className="text-neon-green/50 text-xl font-medium">×</span> {myBet.away_score}
-                                </span>
-                            </div>
-                        )}
+                            );
+                        })()}
 
                         {/* Lista com scroll */}
                         <div className="flex-1 bg-dark-900/50 rounded-2xl border border-dark-700/50 overflow-hidden flex flex-col max-h-[320px]">
@@ -222,6 +244,7 @@ export function ComparatorTab({ matches, ranking, loggedUser, API_URL, accessTok
                                     // Highlight logic if match is done/live
                                     let isExact = false;
                                     let isWinner = false;
+                                    let isWrong = false;
                                     if (match.status === 'FINISHED' || match.status === 'IN_PROGRESS') {
                                         isExact = match.home_score === bet.home_score && match.away_score === bet.away_score;
                                         const homeWin = match.home_score > match.away_score;
@@ -230,10 +253,18 @@ export function ComparatorTab({ matches, ranking, loggedUser, API_URL, accessTok
                                         const betAwayWin = bet.away_score > bet.home_score;
                                         const betDraw = bet.home_score === bet.away_score;
                                         isWinner = !isExact && ((homeWin && betHomeWin) || (awayWin && betAwayWin) || (!homeWin && !awayWin && betDraw));
+                                        isWrong = !isExact && !isWinner;
                                     }
 
+                                    const isPlayedOrLive = match.status === 'FINISHED' || match.status === 'IN_PROGRESS';
+                                    const userIsWrong = isWrong && isPlayedOrLive;
+                                    
+                                    const userBorderClass = isExact ? 'border-yellow-400/40 bg-yellow-400/10' : isWinner ? 'border-neon-green/40 bg-neon-green/10' : userIsWrong ? 'border-red-500/30 bg-red-500/5' : 'border-dark-700/50 bg-dark-800/30';
+                                    const userTextClass = isExact ? 'text-yellow-400' : isWinner ? 'text-neon-green' : userIsWrong ? 'text-red-400/80' : 'text-gray-300';
+                                    const userXClass = isExact ? 'text-yellow-400/50' : isWinner ? 'text-neon-green/50' : userIsWrong ? 'text-red-400/50' : 'text-gray-600';
+
                                     return (
-                                        <div key={bet.id} className={`flex items-center justify-between p-3 rounded-xl border transition-colors hover:bg-dark-800 ${isExact ? 'border-yellow-400/40 bg-yellow-400/10' : isWinner ? 'border-neon-green/40 bg-neon-green/10' : 'border-dark-700/50 bg-dark-800/30'}`}>
+                                        <div key={bet.id} className={`flex items-center justify-between p-3 rounded-xl border transition-colors hover:bg-dark-800 ${userBorderClass}`}>
                                             <div className="flex items-center gap-3">
                                                 <div className="w-8 h-8 rounded-full bg-dark-700 flex items-center justify-center text-gray-300 font-bold text-[10px] border border-dark-600">
                                                     {userInitials}
@@ -241,9 +272,10 @@ export function ComparatorTab({ matches, ranking, loggedUser, API_URL, accessTok
                                                 <span className="font-semibold text-gray-200 text-sm truncate max-w-[100px] sm:max-w-[180px] lg:max-w-[120px] xl:max-w-[180px]">{userName}</span>
                                                 {isExact && <span className="text-[10px] bg-yellow-400 text-yellow-950 px-2.5 py-0.5 rounded-full font-black shadow-[0_0_8px_rgba(250,204,21,0.4)]">EXATO</span>}
                                                 {isWinner && <span className="text-[10px] bg-neon-green/20 border border-neon-green/50 text-neon-green px-2 py-0.5 rounded-full font-bold">Acerto</span>}
+                                                {userIsWrong && <span className="text-[10px] bg-red-500/10 border border-red-500/30 text-red-400 px-2 py-0.5 rounded-full font-bold">Erro</span>}
                                             </div>
-                                            <span className={`text-xl font-black tracking-widest ${isExact ? 'text-yellow-400' : isWinner ? 'text-neon-green' : 'text-gray-300'}`}>
-                                                {bet.home_score} <span className={`font-normal ${isExact ? 'text-yellow-400/50' : isWinner ? 'text-neon-green/50' : 'text-gray-600'}`}>×</span> {bet.away_score}
+                                            <span className={`text-xl font-black tracking-widest ${userTextClass}`}>
+                                                {bet.home_score} <span className={`font-normal ${userXClass}`}>×</span> {bet.away_score}
                                             </span>
                                         </div>
                                     )
