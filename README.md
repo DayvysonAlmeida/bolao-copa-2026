@@ -25,6 +25,7 @@ Projetada com uma arquitetura robusta dividida entre um backend em **Python/Djan
   * **A Maior Goleada:** Extração dinâmica da partida mais emocionante do torneio.
   * **Banners de Urgência:** Alerta dinâmico e pulsante de jogos que ocorrem em menos de 12 horas e ainda estão sem palpites.
 * **Feedback Visual Instantâneo:** Selo dourado animado **"🎯 Mitou!"** quando o usuário acerta o placar exato (5 pontos) e alertas pulsantes **"🔴 AO VIVO"** para jogos em andamento.
+* **Sincronização Oficial Automática (Live Scores):** Integração inteligente com a API `football-data.org` (via gatilho invisível em requisições). Atualiza os placares oficiais, ajusta horários, muda o status para Em Andamento e recalcula a pontuação do ranking **ao vivo**, sem necessidade de CRON jobs externos.
 
 ---
 
@@ -57,6 +58,9 @@ Certifique-se de ter o **Python**, **Node.js** e **Git** instalados. Se preferir
 git clone https://github.com/DayvysonAlmeida/bolao-copa-2026.git
 cd bolao-copa-2026
 ```
+
+**2. Configure as Variáveis de Ambiente**
+Crie um arquivo `.env` na pasta `backend/` contendo a sua chave do `football-data.org` na variável `FOOTBALL_DATA_API_KEY`. (Isso habilitará a atualização automática de placares localmente).
 
 ### 🐳 Opção 1: Usando Docker (Recomendado)
 **Suba o ambiente completo (Backend, Frontend e Banco de Dados)**
