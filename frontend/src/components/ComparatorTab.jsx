@@ -62,10 +62,9 @@ export function ComparatorTab({ matches, ranking, loggedUser, API_URL, accessTok
     // Organizar e encontrar os 3 jogos
     const sortedMatches = [...matches].sort((a, b) => new Date(a.match_date) - new Date(b.match_date));
     
-    // Jogo Anterior: o último finalizado
+    // Últimos jogos: até 4 últimos finalizados
     const finishedMatches = sortedMatches.filter(m => m.status === 'FINISHED');
-    const prevMatch = finishedMatches.length > 0 ? finishedMatches[finishedMatches.length - 1] : null;
-
+    const prevMatches = finishedMatches.slice(-4).reverse();
     // Jogo Atual: SOMENTE se estiver IN_PROGRESS
     let currentMatch = sortedMatches.find(m => m.status === 'IN_PROGRESS') || null;
 
@@ -129,18 +128,24 @@ export function ComparatorTab({ matches, ranking, loggedUser, API_URL, accessTok
                         <h3 className="font-black text-white text-lg uppercase tracking-wider">{title}</h3>
                     </div>
                     
-                    <div className="flex items-center justify-center gap-4 bg-dark-900/80 px-6 py-3 rounded-2xl border border-dark-700 shadow-inner">
-                        <div className="flex items-center gap-3 w-28">
-                            {match.flag_home ? <img src={match.flag_home} alt="" className="w-8 h-6 object-cover rounded-md shadow-sm" /> : <span className="text-xl">🏴</span>}
-                            <span className="font-bold text-gray-200 text-sm truncate">{match.home_team_name}</span>
+                    <div className="flex flex-col items-center gap-2.5">
+                        <div className="flex items-center justify-center gap-4 bg-dark-900/80 px-6 py-3 rounded-2xl border border-dark-700 shadow-inner w-full md:w-auto">
+                            <div className="flex items-center gap-3 w-28">
+                                {match.flag_home ? <img src={match.flag_home} alt="" className="w-8 h-6 object-cover rounded-md shadow-sm" /> : <span className="text-xl">🏴</span>}
+                                <span className="font-bold text-gray-200 text-sm truncate">{match.home_team_name}</span>
+                            </div>
+                            <span className="text-2xl font-black text-white px-2">
+                                {(match.status === 'FINISHED' || match.status === 'IN_PROGRESS') ? `${match.home_score} × ${match.away_score}` : '×'}
+                            </span>
+                            <div className="flex items-center justify-end gap-3 w-28">
+                                <span className="font-bold text-gray-200 text-sm truncate text-right">{match.away_team_name}</span>
+                                {match.flag_away ? <img src={match.flag_away} alt="" className="w-8 h-6 object-cover rounded-md shadow-sm" /> : <span className="text-xl">🏴</span>}
+                            </div>
                         </div>
-                        <span className="text-2xl font-black text-white px-2">
-                            {(match.status === 'FINISHED' || match.status === 'IN_PROGRESS') ? `${match.home_score} × ${match.away_score}` : '×'}
+                        <span className="text-gray-400 text-xs font-bold tracking-widest uppercase flex items-center gap-1.5 bg-dark-800 px-3 py-1 rounded-full border border-dark-700/80">
+                            <span className="text-neon-green">🕒</span> 
+                            {new Date(match.match_date).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })}
                         </span>
-                        <div className="flex items-center justify-end gap-3 w-28">
-                            <span className="font-bold text-gray-200 text-sm truncate text-right">{match.away_team_name}</span>
-                            {match.flag_away ? <img src={match.flag_away} alt="" className="w-8 h-6 object-cover rounded-md shadow-sm" /> : <span className="text-xl">🏴</span>}
-                        </div>
                     </div>
                 </div>
 
@@ -331,7 +336,21 @@ export function ComparatorTab({ matches, ranking, loggedUser, API_URL, accessTok
             <div className="space-y-8">
                 {renderMatchRadar(currentMatch, "Jogo Atual", "⚡")}
                 {renderMatchRadar(nextMatch, "Próximo Jogo", "⏭️")}
-                {renderMatchRadar(prevMatch, "Jogo Anterior", "⏪")}
+                
+                {prevMatches.length > 0 && (
+                    <div className="pt-8 mt-8 border-t border-dark-700/50">
+                        <h3 className="text-xl font-black text-gray-300 mb-6 flex items-center gap-3">
+                            <span className="text-2xl">⏪</span> Últimos Resultados
+                        </h3>
+                        <div className="space-y-8">
+                            {prevMatches.map((match) => 
+                                <div key={match.id}>
+                                    {renderMatchRadar(match, `Jogo Encerrado`, "🏁")}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                )}
             </div>
         </div>
     );
