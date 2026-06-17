@@ -15,7 +15,7 @@ from django.db.models.functions import Coalesce
 # Usamos ModelViewSet porque aqui queremos o pacote completo: 
 # Criar, Ler, Atualizar e Deletar palpites via API.
 class BetViewSet(viewsets.ModelViewSet):
-    queryset = Bet.objects.all()
+    queryset = Bet.objects.select_related('user', 'match', 'match__home_team', 'match__away_team').all()
     serializer_class = BetSerializer
     permission_classes = [IsAuthenticated]
     
@@ -55,7 +55,7 @@ class MyBetsListView(generics.ListAPIView):
         user = self.request.user
         if user.is_anonymous:
             return Bet.objects.none()
-        return Bet.objects.filter(user=user)
+        return Bet.objects.select_related('match', 'match__home_team', 'match__away_team').filter(user=user)
 
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page

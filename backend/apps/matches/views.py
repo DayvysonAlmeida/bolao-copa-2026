@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 
 @method_decorator(cache_page(60), name='dispatch')
 class MatchViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = Match.objects.all().order_by('match_date')
+    queryset = Match.objects.select_related('home_team', 'away_team').all().order_by('match_date')
     serializer_class = MatchSerializer
     
     def list(self, request, *args, **kwargs):
