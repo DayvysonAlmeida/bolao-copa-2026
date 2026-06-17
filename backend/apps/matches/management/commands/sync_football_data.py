@@ -75,7 +75,7 @@ class Command(BaseCommand):
             "X-Auth-Token": api_key
         }
 
-        self.stdout.write(self.style.HTTP_INFO(f"📡 Buscando jogos em {url} ...\n"))
+        self.stdout.write(self.style.HTTP_INFO(f"[INFO] Buscando jogos em {url} ...\n"))
         
         try:
             response = requests.get(url, headers=headers, timeout=15)
@@ -87,7 +87,7 @@ class Command(BaseCommand):
             raise CommandError(f"Erro de conexão ao buscar jogos: {e}")
 
         matches_data = data.get("matches", [])
-        self.stdout.write(self.style.SUCCESS(f"✅ {len(matches_data)} jogos retornados pela API.\n"))
+        self.stdout.write(self.style.SUCCESS(f"[SUCESSO] {len(matches_data)} jogos retornados pela API.\n"))
 
         jogos_atualizados = 0
         jogos_nao_encontrados = 0
@@ -136,17 +136,17 @@ class Command(BaseCommand):
                 
                 jogos_atualizados += 1
                 
-                msg = f"  🔄 Atualizado: {home_ptbr} x {away_ptbr} -> Status: {status} Placar: {home_score}x{away_score}"
+                msg = f"  [ATUALIZADO] Atualizado: {home_ptbr} x {away_ptbr} -> Status: {status} Placar: {home_score}x{away_score}"
                 if horario_atualizado:
-                    msg += f" | 🕒 Horário ajustado!"
+                    msg += f" | [TEMPO] Horário ajustado!"
                 
                 self.stdout.write(msg)
             else:
                 jogos_nao_encontrados += 1
-                self.stdout.write(self.style.WARNING(f"  ⚠️  Não encontrado no banco: {home_en} ({home_ptbr}) x {away_en} ({away_ptbr})"))
+                self.stdout.write(self.style.WARNING(f"  [AVISO] Não encontrado no banco: {home_en} ({home_ptbr}) x {away_en} ({away_ptbr})"))
 
-        self.stdout.write(self.style.SUCCESS("═" * 52))
-        self.stdout.write(self.style.SUCCESS("✅ Sincronização football-data.org finalizada!"))
+        self.stdout.write(self.style.SUCCESS("=" * 52))
+        self.stdout.write(self.style.SUCCESS("[SUCESSO] Sincronização football-data.org finalizada!"))
         self.stdout.write(f"   Jogos atualizados:       {jogos_atualizados}")
         self.stdout.write(f"   Jogos não encontrados:   {jogos_nao_encontrados} (Ignorados para manter integridade)")
-        self.stdout.write(self.style.SUCCESS("═" * 52))
+        self.stdout.write(self.style.SUCCESS("=" * 52))

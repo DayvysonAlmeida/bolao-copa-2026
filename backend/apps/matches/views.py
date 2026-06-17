@@ -22,13 +22,13 @@ class MatchViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = MatchSerializer
     
     def list(self, request, *args, **kwargs):
-        # Verifica no cache se faz mais de 10 minutos (600s) desde o último sync
+        # Verifica no cache se faz mais de 1 minuto (60s) desde o último sync para atualizar mais rápido
         last_sync = cache.get('last_football_sync')
         
         if not last_sync:
             # Coloca no cache imediatamente para que se 10 usuários entrarem juntos, 
             # apenas 1 disparo de sync seja feito
-            cache.set('last_football_sync', True, timeout=600)
+            cache.set('last_football_sync', True, timeout=60)
             try:
                 # Roda a sincronização de forma silenciosa
                 call_command('sync_football_data')

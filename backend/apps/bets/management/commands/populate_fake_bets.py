@@ -43,7 +43,7 @@ class Command(BaseCommand):
                 if created:
                     palpites_criados += 1
 
-        self.stdout.write(self.style.SUCCESS(f"✅ {palpites_criados} novos palpites fictícios criados!"))
+        self.stdout.write(self.style.SUCCESS(f"[SUCESSO] {palpites_criados} novos palpites fictícios criados!"))
         
         self.stdout.write("Recalculando pontos para jogos já finalizados ou em andamento...")
         # Atualizando os pontos
@@ -51,4 +51,4 @@ class Command(BaseCommand):
         for m in matches_to_recalc:
             m.save() # Isso engatilha o recalculo automático do seu model Match!
             
-        self.stdout.write(self.style.SUCCESS("🚀 Pontos recalculados! Ranking atualizado."))
+        self.stdout.write(self.style.SUCCESS("[SUCESSO] Pontos recalculados! Ranking atualizado."))
