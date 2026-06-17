@@ -43,11 +43,18 @@ export function RankingTab({ ranking, loggedUser, userRankPosition }) {
                       {user.first_name ? `${user.first_name} ${user.last_name || ''}`.trim() : user.username}
                     </span>
                   </div>
-                  <div className="flex items-baseline gap-1">
-                    <span className="text-2xl font-black text-neon-green">
-                      {user.total_points}
-                    </span>
-                    <span className="text-sm font-medium text-gray-500">pts</span>
+                  <div className="flex items-center gap-4">
+                    <div className="flex items-baseline gap-1">
+                      <span className="text-2xl font-black text-neon-green">
+                        {user.total_points}
+                      </span>
+                      <span className="text-sm font-medium text-gray-500">pts</span>
+                    </div>
+                    <div className="w-5 text-center font-black text-xl">
+                      {user.trend === 'UP' && <span className="text-neon-green" title="Subiu no ranking">↑</span>}
+                      {user.trend === 'DOWN' && <span className="text-red-500" title="Desceu no ranking">↓</span>}
+                      {(!user.trend || user.trend === 'SAME') && <span className="text-dark-600" title="Manteve a posição">-</span>}
+                    </div>
                   </div>
                 </div>
               )

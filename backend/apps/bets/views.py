@@ -110,3 +110,36 @@ class UserProfileView(APIView):
         
         serializer = UserSerializer(user)
         return Response(serializer.data)
+
+from django.db.models import Count
+from apps.matches.models import Match
+
+@method_decorator(cache_page(60), name='dispatch')
+class StatsView(APIView):
+    """Retorna curiosidades e estatísticas do bolão"""
+    permission_classes = [AllowAny]
+    
+    def get(self, request):
+        total_bets = Bet.objects.count()
+
+        most_bet_match = None
+        match_with_most_bets = Match.objects.annotate(bet_count=Count('bets')).order_by('-bet_count').first()
+        if match_with_most_bets and match_with_most_bets.bet_count > 0:
+            most_bet_match = f"{match_with_most_bets.home_team.name} x {match_with_most_bets.away_team.name} ({match_with_most_bets.bet_count} palpites)"
+
+        top_scorer = None
+        user_5pts = User.objects.filter(bets__points_earned=5).annotate(cravadas=Count('bets')).order_by('-cravadas').first()
+        if user_5pts:
+            top_scorer = f"{user_5pts.first_name or user_5pts.username} ({user_5pts.cravadas} cravadas)"
+
+        safest_player = None
+        user_3pts = User.objects.filter(bets__points_earned=3).annotate(acertos=Count('bets')).order_by('-acertos').first()
+        if user_3pts:
+            safest_player = f"{user_3pts.first_name or user_3pts.username} ({user_3pts.acertos} acertos)"
+
+        return Response({
+            "total_bets": total_bets,
+            "most_bet_match": most_bet_match or "Nenhum palpite ainda",
+            "top_scorer": top_scorer or "Ninguém ainda",
+            "safest_player": safest_player or "Ninguém ainda"
+        })

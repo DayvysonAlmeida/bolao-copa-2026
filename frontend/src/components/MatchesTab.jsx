@@ -3,12 +3,30 @@ import { MatchCard } from './MatchCard';
 
 export function MatchesTab({ matches, loggedUser, getUserBetForMatch, handleOpenModal, betChangeDeadlineLabel }) {
   const [filter, setFilter] = useState('all');
+  const [dateFilter, setDateFilter] = useState('all');
+
+  // Extrair todas as datas únicas para o select
+  const uniqueDates = [...new Set(matches.map(m => new Date(m.match_date).toLocaleDateString('pt-BR')))].sort((a, b) => {
+    const [d1, m1, y1] = a.split('/');
+    const [d2, m2, y2] = b.split('/');
+    return new Date(`${y1}-${m1}-${d1}`) - new Date(`${y2}-${m2}-${d2}`);
+  });
 
   const filteredMatches = matches.filter(match => {
-    if (filter === 'all') return true;
-    if (filter === 'no_bet') return loggedUser && !getUserBetForMatch(match.id) && match.status !== 'FINISHED';
-    if (filter === 'finished') return match.status === 'FINISHED';
-    return true;
+    // Filtro de Status
+    let passStatus = true;
+    if (filter === 'no_bet') passStatus = loggedUser && !getUserBetForMatch(match.id) && match.status !== 'FINISHED';
+    if (filter === 'already_betted') passStatus = loggedUser && !!getUserBetForMatch(match.id);
+    if (filter === 'finished') passStatus = match.status === 'FINISHED';
+    if (filter === 'pending') passStatus = match.status === 'PENDING';
+    
+    // Filtro de Data
+    let passDate = true;
+    if (dateFilter !== 'all') {
+      passDate = new Date(match.match_date).toLocaleDateString('pt-BR') === dateFilter;
+    }
+
+    return passStatus && passDate;
   });
 
   const groupedMatches = filteredMatches.reduce((acc, match) => {
@@ -24,27 +42,57 @@ export function MatchesTab({ matches, loggedUser, getUserBetForMatch, handleOpen
     <main className="max-w-6xl mx-auto flex flex-col gap-6 animate-fadeIn">
       
       {/* Barra de Filtros */}
-      <div className="flex flex-wrap gap-2 justify-center mb-0">
-        <button 
-          onClick={() => setFilter('all')}
-          className={`px-4 py-1.5 rounded-full font-semibold text-xs transition-all ${filter === 'all' ? 'bg-neon-green text-dark-900 shadow-[0_0_10px_rgba(4,211,97,0.3)]' : 'bg-dark-800 text-gray-400 hover:text-white border border-dark-700 hover:border-dark-600'}`}
-        >
-          Todos os Jogos
-        </button>
-        {loggedUser && (
+      <div className="flex flex-col lg:flex-row gap-4 justify-between items-center mb-0">
+        <div className="flex flex-wrap gap-2 justify-center">
           <button 
-            onClick={() => setFilter('no_bet')}
-            className={`px-4 py-1.5 rounded-full font-semibold text-xs transition-all ${filter === 'no_bet' ? 'bg-yellow-400 text-dark-900 shadow-[0_0_10px_rgba(250,204,21,0.3)]' : 'bg-dark-800 text-gray-400 hover:text-white border border-dark-700 hover:border-dark-600'}`}
+            onClick={() => setFilter('all')}
+            className={`px-4 py-1.5 rounded-full font-semibold text-xs transition-all ${filter === 'all' ? 'bg-neon-green text-dark-900 shadow-[0_0_10px_rgba(4,211,97,0.3)]' : 'bg-dark-800 text-gray-400 hover:text-white border border-dark-700 hover:border-dark-600'}`}
           >
-            Faltam Palpitar
+            Todos os Jogos
           </button>
-        )}
-        <button 
-          onClick={() => setFilter('finished')}
-          className={`px-4 py-1.5 rounded-full font-semibold text-xs transition-all ${filter === 'finished' ? 'bg-gray-300 text-dark-900 shadow-[0_0_10px_rgba(209,213,219,0.3)]' : 'bg-dark-800 text-gray-400 hover:text-white border border-dark-700 hover:border-dark-600'}`}
-        >
-          Encerrados
-        </button>
+          {loggedUser && (
+            <>
+              <button 
+                onClick={() => setFilter('no_bet')}
+                className={`px-4 py-1.5 rounded-full font-semibold text-xs transition-all ${filter === 'no_bet' ? 'bg-yellow-400 text-dark-900 shadow-[0_0_10px_rgba(250,204,21,0.3)]' : 'bg-dark-800 text-gray-400 hover:text-white border border-dark-700 hover:border-dark-600'}`}
+              >
+                Faltam Palpitar
+              </button>
+              <button 
+                onClick={() => setFilter('already_betted')}
+                className={`px-4 py-1.5 rounded-full font-semibold text-xs transition-all ${filter === 'already_betted' ? 'bg-blue-400 text-dark-900 shadow-[0_0_10px_rgba(96,165,250,0.3)]' : 'bg-dark-800 text-gray-400 hover:text-white border border-dark-700 hover:border-dark-600'}`}
+              >
+                Já Palpitei
+              </button>
+            </>
+          )}
+          <button 
+            onClick={() => setFilter('pending')}
+            className={`px-4 py-1.5 rounded-full font-semibold text-xs transition-all ${filter === 'pending' ? 'bg-orange-400 text-dark-900 shadow-[0_0_10px_rgba(251,146,60,0.3)]' : 'bg-dark-800 text-gray-400 hover:text-white border border-dark-700 hover:border-dark-600'}`}
+          >
+            Pendentes
+          </button>
+          <button 
+            onClick={() => setFilter('finished')}
+            className={`px-4 py-1.5 rounded-full font-semibold text-xs transition-all ${filter === 'finished' ? 'bg-gray-300 text-dark-900 shadow-[0_0_10px_rgba(209,213,219,0.3)]' : 'bg-dark-800 text-gray-400 hover:text-white border border-dark-700 hover:border-dark-600'}`}
+          >
+            Encerrados
+          </button>
+        </div>
+
+        <div className="flex items-center gap-3 bg-dark-800 px-4 py-1.5 rounded-full border border-dark-700">
+          <span className="text-xs font-semibold text-gray-400">Data:</span>
+          <select 
+            value={dateFilter} 
+            onChange={(e) => setDateFilter(e.target.value)}
+            className="bg-transparent text-white text-xs font-semibold focus:outline-none cursor-pointer"
+          >
+            <option value="all">Todas as Datas</option>
+            {uniqueDates.map(date => (
+              <option key={date} value={date} className="bg-dark-800">{date}</option>
+            ))}
+          </select>
+        </div>
       </div>
 
       {sortedGroups.length === 0 && (

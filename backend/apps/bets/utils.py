@@ -1,0 +1,23 @@
+from django.db.models import Sum
+from django.db.models.functions import Coalesce
+from django.contrib.auth.models import User
+from .models import UserProfile
+
+def update_ranking_positions():
+    """
+    Recalcula o ranking atual e atualiza as posições no UserProfile.
+    Deve ser chamado apenas quando um jogo é finalizado para gerar as setas de tendência.
+    """
+    users = User.objects.annotate(
+        total_points=Coalesce(Sum('bets__points_earned'), 0)
+    ).order_by('-total_points')
+
+    current_rank = 1
+    for user in users:
+        profile, _ = UserProfile.objects.get_or_create(user=user)
+        # A posição atual vira a anterior
+        profile.previous_position = profile.current_position
+        # A nova posição é o index + 1
+        profile.current_position = current_rank
+        profile.save()
+        current_rank += 1

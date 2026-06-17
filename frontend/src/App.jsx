@@ -4,7 +4,6 @@ import { useBets } from './hooks/useBets';
 import { DashboardTab } from './components/DashboardTab';
 import { MatchesTab } from './components/MatchesTab';
 import { RankingTab } from './components/RankingTab';
-import { MyBetsTab } from './components/MyBetsTab';
 import { BetModal } from './components/BetModal';
 import { LoginModal } from './components/LoginModal';
 import { RegisterModal } from './components/RegisterModal';
@@ -203,16 +202,7 @@ function App() {
         >
           ⚽ Jogos
         </button>
-        <button 
-          onClick={() => setActiveTab('my-bets')}
-          className={`px-5 py-2.5 rounded-full font-bold transition-all text-sm ${
-            activeTab === 'my-bets' 
-            ? 'bg-neon-green text-dark-900 shadow-[0_0_15px_rgba(4,211,97,0.4)]' 
-            : 'bg-dark-800 text-gray-400 hover:text-white hover:bg-dark-700'
-          }`}
-        >
-          📌 Meus Palpites
-        </button>
+
         <button 
           onClick={() => setActiveTab('comparator')}
           className={`px-5 py-2.5 rounded-full font-bold transition-all text-sm ${
@@ -287,17 +277,7 @@ function App() {
         />
       )}
 
-      {activeTab === 'my-bets' && (
-        <MyBetsTab 
-          userBets={userBets} 
-          matches={matches} 
-          loggedUser={loggedUser} 
-          handleOpenModal={handleOpenModal} 
-          setShowRegisterModal={setShowRegisterModal} 
-          setShowLoginModal={setShowLoginModal} 
-          betChangeDeadlineLabel={betChangeDeadlineLabel} 
-        />
-      )}
+
 
       {activeTab === 'comparator' && (
         <ComparatorTab
