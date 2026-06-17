@@ -91,6 +91,7 @@ class Command(BaseCommand):
 
         jogos_atualizados = 0
         jogos_nao_encontrados = 0
+        teve_jogo_finalizado_agora = False
 
         for m in matches_data:
             if not m.get("homeTeam") or not m.get("awayTeam") or not m["homeTeam"].get("name") or not m["awayTeam"].get("name"):
@@ -120,6 +121,9 @@ class Command(BaseCommand):
             if match_qs.exists():
                 match_obj = match_qs.first()
                 
+                if match_obj.status != 'FINISHED' and status == 'FINISHED':
+                    teve_jogo_finalizado_agora = True
+                
                 if api_status in ["IN_PLAY", "PAUSED", "FINISHED", "AWARDED"]:
                     if home_score is not None and away_score is not None:
                         match_obj.home_score = home_score
@@ -144,6 +148,11 @@ class Command(BaseCommand):
             else:
                 jogos_nao_encontrados += 1
                 self.stdout.write(self.style.WARNING(f"  [AVISO] Não encontrado no banco: {home_en} ({home_ptbr}) x {away_en} ({away_ptbr})"))
+
+        if teve_jogo_finalizado_agora:
+            from apps.bets.utils import update_ranking_positions
+            self.stdout.write(self.style.HTTP_INFO("[INFO] Atualizando histórico de posições do ranking..."))
+            update_ranking_positions()
 
         self.stdout.write(self.style.SUCCESS("=" * 52))
         self.stdout.write(self.style.SUCCESS("[SUCESSO] Sincronização football-data.org finalizada!"))

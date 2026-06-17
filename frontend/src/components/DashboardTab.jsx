@@ -150,7 +150,7 @@ function StatCard({ icon, label, value, sub, color = 'neon-green', highlight = f
 // ═══════════════════════════════════════════════════════════════════════════════
 // DASHBOARD PÚBLICO (visitante)
 // ═══════════════════════════════════════════════════════════════════════════════
-function PublicDashboard({ ranking, matches, setActiveTab, setShowLoginModal }) {
+function PublicDashboard({ ranking, matches, setActiveTab, setShowLoginModal, stats }) {
   const [selectedGroup, setSelectedGroup] = useState('A');
 
   const liveMatches = matches.filter(m => m.status === 'IN_PROGRESS');
@@ -246,6 +246,31 @@ function PublicDashboard({ ranking, matches, setActiveTab, setShowLoginModal }) 
         <StatCard icon="👥" label="Participantes" value={totalParticipants} sub="no bolão" color="yellow" />
         <StatCard icon={liveCount > 0 ? "🔴" : "⏰"} label={liveCount > 0 ? "Jogos Ao Vivo" : "Próximos Jogos"} value={liveCount > 0 ? liveCount : upcomingMatches.length} sub={liveCount > 0 ? "acontecendo agora!" : "agendados"} color={liveCount > 0 ? "red" : "purple"} highlight />
       </div>
+
+      {/* ── Estatísticas da Galera ────────────────────────────────────── */}
+      {stats && (
+        <div className="bg-dark-800 border border-dark-700 rounded-2xl p-4">
+          <h3 className="font-bold text-white text-sm uppercase tracking-wider mb-3">📊 Estatísticas da Galera</h3>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <div className="p-3 bg-dark-900 rounded-xl border border-dark-700">
+              <p className="text-[10px] text-gray-500 uppercase">Maior Vidente</p>
+              <p className="text-sm font-bold text-yellow-400 truncate" title={stats.top_scorer}>{stats.top_scorer}</p>
+            </div>
+            <div className="p-3 bg-dark-900 rounded-xl border border-dark-700">
+              <p className="text-[10px] text-gray-500 uppercase">Mais Seguro</p>
+              <p className="text-sm font-bold text-neon-green truncate" title={stats.safest_player}>{stats.safest_player}</p>
+            </div>
+            <div className="p-3 bg-dark-900 rounded-xl border border-dark-700">
+              <p className="text-[10px] text-gray-500 uppercase">Jogo + Apostado</p>
+              <p className="text-sm font-bold text-blue-400 truncate" title={stats.most_bet_match}>{stats.most_bet_match}</p>
+            </div>
+            <div className="p-3 bg-dark-900 rounded-xl border border-dark-700">
+              <p className="text-[10px] text-gray-500 uppercase">Total de Palpites</p>
+              <p className="text-sm font-bold text-white truncate">{stats.total_bets}</p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ── Linha principal ───────────────────────────────────────────── */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
@@ -446,7 +471,7 @@ function PublicDashboard({ ranking, matches, setActiveTab, setShowLoginModal }) 
 // ═══════════════════════════════════════════════════════════════════════════════
 // DASHBOARD PESSOAL (logado)
 // ═══════════════════════════════════════════════════════════════════════════════
-function PersonalDashboard({ ranking, matches, userBets, loggedUser, handleOpenModal, setActiveTab, API_URL, accessToken }) {
+function PersonalDashboard({ ranking, matches, userBets, loggedUser, handleOpenModal, setActiveTab, API_URL, accessToken, stats }) {
   const [selectedGroup, setSelectedGroup] = useState('A');
   const [leaderBets, setLeaderBets] = useState([]);
 
@@ -633,6 +658,31 @@ function PersonalDashboard({ ranking, matches, userBets, loggedUser, handleOpenM
           </div>
         </div>
       </div>
+
+      {/* ── Estatísticas da Galera ────────────────────────────────────── */}
+      {stats && (
+        <div className="bg-dark-800 border border-dark-700 rounded-2xl p-4">
+          <h3 className="font-bold text-white text-sm uppercase tracking-wider mb-3">📊 Estatísticas da Galera</h3>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <div className="p-3 bg-dark-900 rounded-xl border border-dark-700">
+              <p className="text-[10px] text-gray-500 uppercase">Maior Vidente</p>
+              <p className="text-sm font-bold text-yellow-400 truncate" title={stats.top_scorer}>{stats.top_scorer}</p>
+            </div>
+            <div className="p-3 bg-dark-900 rounded-xl border border-dark-700">
+              <p className="text-[10px] text-gray-500 uppercase">Mais Seguro</p>
+              <p className="text-sm font-bold text-neon-green truncate" title={stats.safest_player}>{stats.safest_player}</p>
+            </div>
+            <div className="p-3 bg-dark-900 rounded-xl border border-dark-700">
+              <p className="text-[10px] text-gray-500 uppercase">Jogo + Apostado</p>
+              <p className="text-sm font-bold text-blue-400 truncate" title={stats.most_bet_match}>{stats.most_bet_match}</p>
+            </div>
+            <div className="p-3 bg-dark-900 rounded-xl border border-dark-700">
+              <p className="text-[10px] text-gray-500 uppercase">Total de Palpites</p>
+              <p className="text-sm font-bold text-white truncate">{stats.total_bets}</p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ── Jogos ao vivo (com meu palpite destacado) ─────────────────── */}
       {liveMatches.length > 0 && (
@@ -916,6 +966,16 @@ function PersonalDashboard({ ranking, matches, userBets, loggedUser, handleOpenM
 // EXPORTAÇÃO PRINCIPAL — escolhe o modo
 // ═══════════════════════════════════════════════════════════════════════════════
 export function DashboardTab({ ranking, matches, userBets, loggedUser, handleOpenModal, setActiveTab, setShowLoginModal, API_URL, accessToken }) {
+  const [stats, setStats] = useState(null);
+
+  useEffect(() => {
+    if (!API_URL) return;
+    fetch(`${API_URL}/stats/`)
+      .then(res => res.json())
+      .then(data => setStats(data))
+      .catch(console.error);
+  }, [API_URL]);
+
   if (loggedUser) {
     return (
       <PersonalDashboard
@@ -927,6 +987,7 @@ export function DashboardTab({ ranking, matches, userBets, loggedUser, handleOpe
         setActiveTab={setActiveTab}
         API_URL={API_URL}
         accessToken={accessToken}
+        stats={stats}
       />
     );
   }
@@ -936,6 +997,7 @@ export function DashboardTab({ ranking, matches, userBets, loggedUser, handleOpe
       matches={matches}
       setActiveTab={setActiveTab}
       setShowLoginModal={setShowLoginModal}
+      stats={stats}
     />
   );
 }
