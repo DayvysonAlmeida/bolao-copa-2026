@@ -261,12 +261,12 @@ function PublicDashboard({ ranking, matches, setActiveTab, setShowLoginModal, st
               <p className="text-sm font-bold text-neon-green truncate" title={stats.safest_player}>{stats.safest_player}</p>
             </div>
             <div className="p-3 bg-dark-900 rounded-xl border border-dark-700">
-              <p className="text-[10px] text-gray-500 uppercase">Jogo + Apostado</p>
-              <p className="text-sm font-bold text-blue-400 truncate" title={stats.most_bet_match}>{stats.most_bet_match}</p>
+              <p className="text-[10px] text-gray-500 uppercase">🏮 Lanterna</p>
+              <p className="text-sm font-bold text-red-400 truncate" title={stats.lanterna}>{stats.lanterna}</p>
             </div>
             <div className="p-3 bg-dark-900 rounded-xl border border-dark-700">
-              <p className="text-[10px] text-gray-500 uppercase">Total de Palpites</p>
-              <p className="text-sm font-bold text-white truncate">{stats.total_bets}</p>
+              <p className="text-[10px] text-gray-500 uppercase">Média de Pontos</p>
+              <p className="text-sm font-bold text-white truncate">{stats.media_pontos} pts</p>
             </div>
           </div>
         </div>
@@ -673,12 +673,12 @@ function PersonalDashboard({ ranking, matches, userBets, loggedUser, handleOpenM
               <p className="text-sm font-bold text-neon-green truncate" title={stats.safest_player}>{stats.safest_player}</p>
             </div>
             <div className="p-3 bg-dark-900 rounded-xl border border-dark-700">
-              <p className="text-[10px] text-gray-500 uppercase">Jogo + Apostado</p>
-              <p className="text-sm font-bold text-blue-400 truncate" title={stats.most_bet_match}>{stats.most_bet_match}</p>
+              <p className="text-[10px] text-gray-500 uppercase">🏮 Lanterna</p>
+              <p className="text-sm font-bold text-red-400 truncate" title={stats.lanterna}>{stats.lanterna}</p>
             </div>
             <div className="p-3 bg-dark-900 rounded-xl border border-dark-700">
-              <p className="text-[10px] text-gray-500 uppercase">Total de Palpites</p>
-              <p className="text-sm font-bold text-white truncate">{stats.total_bets}</p>
+              <p className="text-[10px] text-gray-500 uppercase">Média de Pontos</p>
+              <p className="text-sm font-bold text-white truncate">{stats.media_pontos} pts</p>
             </div>
           </div>
         </div>

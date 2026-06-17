@@ -111,8 +111,8 @@ class UserProfileView(APIView):
         serializer = UserSerializer(user)
         return Response(serializer.data)
 
-from django.db.models import Count
-from apps.matches.models import Match
+from django.db.models import Count, Sum, Avg
+from django.db.models.functions import Coalesce
 
 @method_decorator(cache_page(60), name='dispatch')
 class StatsView(APIView):
@@ -120,13 +120,6 @@ class StatsView(APIView):
     permission_classes = [AllowAny]
     
     def get(self, request):
-        total_bets = Bet.objects.count()
-
-        most_bet_match = None
-        match_with_most_bets = Match.objects.annotate(bet_count=Count('bets')).order_by('-bet_count').first()
-        if match_with_most_bets and match_with_most_bets.bet_count > 0:
-            most_bet_match = f"{match_with_most_bets.home_team.name} x {match_with_most_bets.away_team.name} ({match_with_most_bets.bet_count} palpites)"
-
         top_scorer = None
         user_5pts = User.objects.filter(bets__points_earned=5).annotate(cravadas=Count('bets')).order_by('-cravadas').first()
         if user_5pts:
@@ -137,9 +130,20 @@ class StatsView(APIView):
         if user_3pts:
             safest_player = f"{user_3pts.first_name or user_3pts.username} ({user_3pts.acertos} acertos)"
 
+        # Cálculos de Lanterna e Média de Pontos
+        users_with_points = User.objects.annotate(total_points=Coalesce(Sum('bets__points_earned'), 0))
+        
+        lanterna = None
+        lanterna_user = users_with_points.order_by('total_points').first()
+        if lanterna_user:
+            lanterna = f"{lanterna_user.first_name or lanterna_user.username} ({lanterna_user.total_points} pts)"
+            
+        media_calc = users_with_points.aggregate(avg_points=Avg('total_points'))
+        media_pontos = round(media_calc['avg_points'] or 0, 1)
+
         return Response({
-            "total_bets": total_bets,
-            "most_bet_match": most_bet_match or "Nenhum palpite ainda",
             "top_scorer": top_scorer or "Ninguém ainda",
-            "safest_player": safest_player or "Ninguém ainda"
+            "safest_player": safest_player or "Ninguém ainda",
+            "lanterna": lanterna or "Ninguém ainda",
+            "media_pontos": media_pontos
         })
