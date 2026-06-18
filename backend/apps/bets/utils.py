@@ -1,4 +1,4 @@
-from django.db.models import Sum
+from django.db.models import Sum, Count, Q
 from django.db.models.functions import Coalesce
 from django.contrib.auth.models import User
 from .models import UserProfile
@@ -9,8 +9,10 @@ def update_ranking_positions():
     Deve ser chamado apenas quando um jogo é finalizado para gerar as setas de tendência.
     """
     users = User.objects.annotate(
-        total_points=Coalesce(Sum('bets__points_earned'), 0)
-    ).order_by('-total_points')
+        total_points=Coalesce(Sum('bets__points_earned'), 0),
+        cravadas=Count('bets', filter=Q(bets__points_earned=5)),
+        acertos=Count('bets', filter=Q(bets__points_earned=3))
+    ).order_by('-total_points', '-cravadas', '-acertos', 'id')
 
     current_rank = 1
     for user in users:

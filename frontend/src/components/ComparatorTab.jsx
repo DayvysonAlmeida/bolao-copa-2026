@@ -293,10 +293,25 @@ export function ComparatorTab({ matches, ranking, loggedUser, API_URL, accessTok
                                                         </span>
                                                     )}
                                                 </div>
-                                                <span className="font-semibold text-gray-200 text-sm truncate max-w-[100px] sm:max-w-[180px] lg:max-w-[120px] xl:max-w-[180px]">{userName}</span>
-                                                {isExact && <span className="text-[10px] bg-yellow-400 text-yellow-950 px-2.5 py-0.5 rounded-full font-black shadow-[0_0_8px_rgba(250,204,21,0.4)]">EXATO</span>}
-                                                {isWinner && <span className="text-[10px] bg-neon-green/20 border border-neon-green/50 text-neon-green px-2 py-0.5 rounded-full font-bold">Acerto</span>}
-                                                {userIsWrong && <span className="text-[10px] bg-red-500/10 border border-red-500/30 text-red-400 px-2 py-0.5 rounded-full font-bold">Erro</span>}
+                                                <div className="flex flex-col">
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="font-semibold text-gray-200 text-sm truncate max-w-[100px] sm:max-w-[180px] lg:max-w-[120px] xl:max-w-[180px]">{userName}</span>
+                                                        {isExact && <span className="text-[10px] bg-yellow-400 text-yellow-950 px-2.5 py-0.5 rounded-full font-black shadow-[0_0_8px_rgba(250,204,21,0.4)]">EXATO</span>}
+                                                        {isWinner && <span className="text-[10px] bg-neon-green/20 border border-neon-green/50 text-neon-green px-2 py-0.5 rounded-full font-bold">Acerto</span>}
+                                                        {userIsWrong && <span className="text-[10px] bg-red-500/10 border border-red-500/30 text-red-400 px-2 py-0.5 rounded-full font-bold">Erro</span>}
+                                                    </div>
+                                                    {user && (
+                                                        <div className="flex items-center gap-1.5 mt-0.5">
+                                                            <span className="text-[9px] bg-yellow-400/10 text-yellow-500 px-1.5 py-0.5 rounded-full border border-yellow-400/20" title="Placares Exatos">🎯 {user.cravadas || 0}</span>
+                                                            <span className="text-[9px] bg-neon-green/10 text-neon-green px-1.5 py-0.5 rounded-full border border-neon-green/20" title="Acertos de Tendência">✓ {user.acertos || 0}</span>
+                                                            <span className="text-[10px] ml-1 font-black">
+                                                                {user.trend === 'UP' && <span className="text-neon-green" title="Subiu no ranking">↑</span>}
+                                                                {user.trend === 'DOWN' && <span className="text-red-500" title="Desceu no ranking">↓</span>}
+                                                                {(!user.trend || user.trend === 'SAME') && <span className="text-dark-600" title="Manteve">-</span>}
+                                                            </span>
+                                                        </div>
+                                                    )}
+                                                </div>
                                             </div>
                                             <span className={`text-xl font-black tracking-widest ${userTextClass}`}>
                                                 {bet.home_score} <span className={`font-normal ${userXClass}`}>×</span> {bet.away_score}
@@ -327,9 +342,15 @@ export function ComparatorTab({ matches, ranking, loggedUser, API_URL, accessTok
                     </div>
                     <p className="text-gray-400 text-sm max-w-2xl">Aqui você tem a visão completa! Compare o seu palpite com o restante da galera para o jogo que acabou de terminar, o jogo de agora e o próximo.</p>
                 </div>
-                <div className="flex gap-2">
-                    <span className="px-3 py-1 bg-dark-900 border border-dark-700 rounded-full text-xs font-bold text-gray-400 flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-neon-green"></span> Ao vivo</span>
-                    <span className="px-3 py-1 bg-dark-900 border border-dark-700 rounded-full text-xs font-bold text-gray-400 flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-yellow-400"></span> Finalizados</span>
+                <div className="flex gap-3">
+                    <div className="px-5 py-2 bg-dark-900 border border-dark-700 rounded-2xl flex flex-col items-center shadow-inner">
+                        <span className="text-xl font-black text-neon-green">{matches.filter(m => m.status === 'PENDING').length}</span>
+                        <span className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Jogos Pendentes</span>
+                    </div>
+                    <div className="px-5 py-2 bg-dark-900 border border-dark-700 rounded-2xl flex flex-col items-center shadow-inner">
+                        <span className="text-xl font-black text-blue-400">{ranking.length}</span>
+                        <span className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Participantes</span>
+                    </div>
                 </div>
             </div>
 
