@@ -36,6 +36,11 @@ class RankingSerializer(serializers.ModelSerializer):
             return 'UP'
         elif obj.profile.current_position > obj.profile.previous_position:
             return 'DOWN'
+            
+        # Se manteve a posição, mas marcou pontos desde a última atualização
+        if obj.profile.current_points > obj.profile.previous_points:
+            return 'UP'
+            
         return 'SAME'
 
 

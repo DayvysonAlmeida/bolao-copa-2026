@@ -182,17 +182,21 @@ function PublicDashboard({ ranking, matches, setActiveTab, setShowLoginModal, st
 
   // Inicializa grupo selecionado com o primeiro disponível
   const activeGroup = groups.includes(selectedGroup) ? selectedGroup : (groups[0] || 'A');
-  const groupMatchesDone = matches.filter(m => m.group === activeGroup && m.status === 'FINISHED');
+  const groupMatchesDone = matches.filter(m => m.group === activeGroup && (m.status === 'FINISHED' || m.status === 'IN_PROGRESS'));
 
   // Classificação do grupo selecionado
   const groupTable = useMemo(() => {
     const teams = {};
+    matches.filter(m => m.group === activeGroup).forEach(m => {
+      if (!teams[m.home_team_name]) teams[m.home_team_name] = { flag: m.flag_home, J: 0, V: 0, E: 0, D: 0, GP: 0, GC: 0, PTS: 0 };
+      if (!teams[m.away_team_name]) teams[m.away_team_name] = { flag: m.flag_away, J: 0, V: 0, E: 0, D: 0, GP: 0, GC: 0, PTS: 0 };
+    });
     groupMatchesDone.forEach(m => {
+      if (m.home_score === null || m.away_score === null) return;
       [
-        [m.home_team_name, m.flag_home, m.home_score, m.away_score],
-        [m.away_team_name, m.flag_away, m.away_score, m.home_score]
-      ].forEach(([name, flag, gp, gc]) => {
-        if (!teams[name]) teams[name] = { flag, J: 0, V: 0, E: 0, D: 0, GP: 0, GC: 0, PTS: 0 };
+        [m.home_team_name, m.home_score, m.away_score],
+        [m.away_team_name, m.away_score, m.home_score]
+      ].forEach(([name, gp, gc]) => {
         teams[name].J++; teams[name].GP += gp; teams[name].GC += gc;
       });
       if (m.home_score > m.away_score) { teams[m.home_team_name].V++; teams[m.home_team_name].PTS += 3; teams[m.away_team_name].D++; }
@@ -201,7 +205,7 @@ function PublicDashboard({ ranking, matches, setActiveTab, setShowLoginModal, st
     });
     return Object.entries(teams)
       .map(([name, s]) => ({ name, ...s, SG: s.GP - s.GC }))
-      .sort((a, b) => b.PTS - a.PTS || b.SG - a.SG);
+      .sort((a, b) => b.PTS - a.PTS || b.SG - a.SG || b.GP - a.GP);
   }, [activeGroup, matches]);
 
   // Stats gerais
@@ -559,7 +563,8 @@ function PersonalDashboard({ ranking, matches, userBets, loggedUser, handleOpenM
   // Últimos meus resultados
   const myLastResults = userBets
     .filter(b => matches.find(m => m.id === b.match)?.status === 'FINISHED')
-    .slice(-4).reverse()
+    .sort((a, b) => new Date(matches.find(m => m.id === b.match).match_date) - new Date(matches.find(m => m.id === a.match).match_date))
+    .slice(0, 4)
     .map(b => ({ ...b, matchData: matches.find(m => m.id === b.match) }));
 
   // Próximos sem palpite
@@ -593,13 +598,17 @@ function PersonalDashboard({ ranking, matches, userBets, loggedUser, handleOpenM
   // Distribuição geral de palpites por resultado
   const groups = [...new Set(matches.map(m => m.group).filter(Boolean))].sort();
   const activeGroup = groups.includes(selectedGroup) ? selectedGroup : (groups[0] || 'A');
-  const groupMatchesDone = matches.filter(m => m.group === activeGroup && m.status === 'FINISHED');
+  const groupMatchesDone = matches.filter(m => m.group === activeGroup && (m.status === 'FINISHED' || m.status === 'IN_PROGRESS'));
   const groupTable = useMemo(() => {
     const teams = {};
+    matches.filter(m => m.group === activeGroup).forEach(m => {
+      if (!teams[m.home_team_name]) teams[m.home_team_name] = { flag: m.flag_home, J: 0, V: 0, E: 0, D: 0, GP: 0, GC: 0, PTS: 0 };
+      if (!teams[m.away_team_name]) teams[m.away_team_name] = { flag: m.flag_away, J: 0, V: 0, E: 0, D: 0, GP: 0, GC: 0, PTS: 0 };
+    });
     groupMatchesDone.forEach(m => {
-      [[m.home_team_name, m.flag_home, m.home_score, m.away_score],
-      [m.away_team_name, m.flag_away, m.away_score, m.home_score]].forEach(([name, flag, gp, gc]) => {
-        if (!teams[name]) teams[name] = { flag, J: 0, V: 0, E: 0, D: 0, GP: 0, GC: 0, PTS: 0 };
+      if (m.home_score === null || m.away_score === null) return;
+      [[m.home_team_name, m.home_score, m.away_score],
+      [m.away_team_name, m.away_score, m.home_score]].forEach(([name, gp, gc]) => {
         teams[name].J++; teams[name].GP += gp; teams[name].GC += gc;
       });
       if (m.home_score > m.away_score) { teams[m.home_team_name].V++; teams[m.home_team_name].PTS += 3; teams[m.away_team_name].D++; }
@@ -607,7 +616,7 @@ function PersonalDashboard({ ranking, matches, userBets, loggedUser, handleOpenM
       else { teams[m.home_team_name].E++; teams[m.home_team_name].PTS++; teams[m.away_team_name].E++; teams[m.away_team_name].PTS++; }
     });
     return Object.entries(teams).map(([name, s]) => ({ name, ...s, SG: s.GP - s.GC }))
-      .sort((a, b) => b.PTS - a.PTS || b.SG - a.SG);
+      .sort((a, b) => b.PTS - a.PTS || b.SG - a.SG || b.GP - a.GP);
   }, [activeGroup, matches]);
 
   const firstName = loggedUser.first_name || loggedUser.username;
@@ -762,7 +771,7 @@ function PersonalDashboard({ ranking, matches, userBets, loggedUser, handleOpenM
         <div className="flex-1 min-w-[280px] bg-dark-800 border border-dark-700 rounded-2xl p-4">
           <div className="flex items-center justify-between mb-3">
             <h3 className="font-bold text-white text-sm uppercase tracking-wider">📋 Histórico</h3>
-            <button onClick={() => setActiveTab('my-bets')} className="text-xs text-neon-green hover:underline">Ver todos →</button>
+            <button onClick={() => setActiveTab('matches')} className="text-xs text-neon-green hover:underline">Ver todos →</button>
           </div>
           {myLastResults.length === 0 ? (
             <div className="text-center py-8">

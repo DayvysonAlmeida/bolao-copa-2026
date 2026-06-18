@@ -17,9 +17,11 @@ def update_ranking_positions():
     current_rank = 1
     for user in users:
         profile, _ = UserProfile.objects.get_or_create(user=user)
-        # A posição atual vira a anterior
+        # A posição e pontos atuais viram os anteriores
         profile.previous_position = profile.current_position
-        # A nova posição é o index + 1
+        profile.previous_points = profile.current_points
+        # Atualiza para os novos valores
         profile.current_position = current_rank
+        profile.current_points = user.total_points
         profile.save()
         current_rank += 1
