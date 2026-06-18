@@ -39,9 +39,20 @@ export function RankingTab({ ranking, loggedUser, userRankPosition }) {
                     <div className={`w-10 h-10 flex items-center justify-center rounded-full font-black text-xl ${positionStyle}`}>
                       {isFirst ? '🥇' : isSecond ? '🥈' : isThird ? '🥉' : <span className="text-sm">{index + 1}º</span>}
                     </div>
-                    <span className={`text-lg font-semibold ${isFirst ? 'text-white' : 'text-gray-300'}`}>
-                      {user.first_name ? `${user.first_name} ${user.last_name || ''}`.trim() : user.username}
-                    </span>
+                    <div className="flex flex-col">
+                      <span className={`text-lg font-semibold ${isFirst ? 'text-white' : 'text-gray-300'}`}>
+                        {user.first_name ? `${user.first_name} ${user.last_name || ''}`.trim() : user.username}
+                      </span>
+                      <div className="flex items-center gap-1.5 mt-1">
+                          <span className="text-[10px] bg-yellow-400/10 text-yellow-500 px-2 py-0.5 rounded-full border border-yellow-400/20 font-bold" title="Placares Exatos (5 pontos)">🎯 {user.cravadas || 0} Cravadas</span>
+                          <span className="text-[10px] bg-neon-green/10 text-neon-green px-2 py-0.5 rounded-full border border-neon-green/20 font-bold" title="Acertos de Vencedor/Empate (3 pontos)">✓ {user.acertos || 0} Acertos</span>
+                          <span className="text-[12px] ml-2 font-black">
+                              {user.trend === 'UP' && <span className="text-neon-green" title="Subiu no ranking">↑</span>}
+                              {user.trend === 'DOWN' && <span className="text-red-500" title="Desceu no ranking">↓</span>}
+                              {(!user.trend || user.trend === 'SAME') && <span className="text-dark-600" title="Manteve a posição">-</span>}
+                          </span>
+                      </div>
+                    </div>
                   </div>
                   <div className="flex items-center gap-4">
                     <div className="flex items-baseline gap-1">
@@ -49,11 +60,6 @@ export function RankingTab({ ranking, loggedUser, userRankPosition }) {
                         {user.total_points}
                       </span>
                       <span className="text-sm font-medium text-gray-500">pts</span>
-                    </div>
-                    <div className="w-5 text-center font-black text-xl">
-                      {user.trend === 'UP' && <span className="text-neon-green" title="Subiu no ranking">↑</span>}
-                      {user.trend === 'DOWN' && <span className="text-red-500" title="Desceu no ranking">↓</span>}
-                      {(!user.trend || user.trend === 'SAME') && <span className="text-dark-600" title="Manteve a posição">-</span>}
                     </div>
                   </div>
                 </div>

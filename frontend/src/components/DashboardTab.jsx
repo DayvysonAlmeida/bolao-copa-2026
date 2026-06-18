@@ -349,6 +349,10 @@ function PublicDashboard({ ranking, matches, setActiveTab, setShowLoginModal, st
                   <div className="flex flex-col items-center w-1/3 animate-[slideUp_0.5s_ease-out]">
                     <span className="text-sm font-bold text-gray-300 truncate w-full text-center px-1">{top5[1].first_name || top5[1].username}</span>
                     <span className="text-[10px] font-black text-white mb-1">{top5[1].total_points} pts</span>
+                    <div className="flex items-center gap-1 mb-1">
+                        <span className="text-[8px] bg-yellow-400/10 text-yellow-500 px-1.5 py-0.5 rounded border border-yellow-400/20 font-bold" title="Cravadas">🎯 {top5[1].cravadas || 0}</span>
+                        <span className="text-[8px] bg-neon-green/10 text-neon-green px-1.5 py-0.5 rounded border border-neon-green/20 font-bold" title="Acertos">✓ {top5[1].acertos || 0}</span>
+                    </div>
                     <div className="w-full bg-gradient-to-t from-dark-700 to-dark-600 rounded-t-xl h-20 border-t-2 border-gray-400 flex items-start justify-center pt-2">
                       <span className="text-2xl">🥈</span>
                     </div>
@@ -360,6 +364,10 @@ function PublicDashboard({ ranking, matches, setActiveTab, setShowLoginModal, st
                     <span className="text-2xl mb-1 animate-bounce">👑</span>
                     <span className="text-sm font-bold text-yellow-400 truncate w-full text-center px-1">{top5[0].first_name || top5[0].username}</span>
                     <span className="text-[10px] font-black text-white mb-1">{top5[0].total_points} pts</span>
+                    <div className="flex items-center gap-1 mb-1">
+                        <span className="text-[8px] bg-yellow-400/10 text-yellow-500 px-1.5 py-0.5 rounded border border-yellow-400/20 font-bold" title="Cravadas">🎯 {top5[0].cravadas || 0}</span>
+                        <span className="text-[8px] bg-neon-green/10 text-neon-green px-1.5 py-0.5 rounded border border-neon-green/20 font-bold" title="Acertos">✓ {top5[0].acertos || 0}</span>
+                    </div>
                     <div className="w-full bg-gradient-to-t from-yellow-500/20 to-yellow-500/40 rounded-t-xl h-28 border-t-2 border-yellow-400 flex items-start justify-center pt-2 shadow-[0_-5px_20px_rgba(250,204,21,0.2)]">
                       <span className="text-2xl">🥇</span>
                     </div>
@@ -370,6 +378,10 @@ function PublicDashboard({ ranking, matches, setActiveTab, setShowLoginModal, st
                   <div className="flex flex-col items-center w-1/3 animate-[slideUp_0.6s_ease-out]">
                     <span className="text-sm font-bold text-orange-400 truncate w-full text-center px-1">{top5[2].first_name || top5[2].username}</span>
                     <span className="text-[10px] font-black text-white mb-1">{top5[2].total_points} pts</span>
+                    <div className="flex items-center gap-1 mb-1">
+                        <span className="text-[8px] bg-yellow-400/10 text-yellow-500 px-1.5 py-0.5 rounded border border-yellow-400/20 font-bold" title="Cravadas">🎯 {top5[2].cravadas || 0}</span>
+                        <span className="text-[8px] bg-neon-green/10 text-neon-green px-1.5 py-0.5 rounded border border-neon-green/20 font-bold" title="Acertos">✓ {top5[2].acertos || 0}</span>
+                    </div>
                     <div className="w-full bg-gradient-to-t from-orange-900/40 to-orange-800/40 rounded-t-xl h-16 border-t-2 border-orange-500 flex items-start justify-center pt-2">
                       <span className="text-2xl">🥉</span>
                     </div>
@@ -382,7 +394,18 @@ function PublicDashboard({ ranking, matches, setActiveTab, setShowLoginModal, st
                 {top5.slice(3).map((u, i) => (
                   <div key={u.id} className="flex items-center gap-3 px-3 py-2 rounded-xl bg-dark-900/50 border border-dark-700/50">
                     <span className="text-[10px] text-gray-500 font-bold w-6">{i + 4}º</span>
-                    <span className="flex-1 text-sm text-gray-300 font-semibold truncate">{u.first_name || u.username}</span>
+                    <div className="flex-1 flex flex-col">
+                        <span className="text-sm text-gray-300 font-semibold truncate">{u.first_name || u.username}</span>
+                        <div className="flex items-center gap-1.5 mt-0.5">
+                            <span className="text-[9px] bg-yellow-400/10 text-yellow-500 px-1.5 py-0.5 rounded-full border border-yellow-400/20 font-bold">🎯 {u.cravadas || 0}</span>
+                            <span className="text-[9px] bg-neon-green/10 text-neon-green px-1.5 py-0.5 rounded-full border border-neon-green/20 font-bold">✓ {u.acertos || 0}</span>
+                            <span className="text-[10px] ml-1 font-black">
+                                {u.trend === 'UP' && <span className="text-neon-green">↑</span>}
+                                {u.trend === 'DOWN' && <span className="text-red-500">↓</span>}
+                                {(!u.trend || u.trend === 'SAME') && <span className="text-dark-600">-</span>}
+                            </span>
+                        </div>
+                    </div>
                     <span className="text-xs font-black text-neon-green">{u.total_points} pts</span>
                   </div>
                 ))}
@@ -867,7 +890,18 @@ function PersonalDashboard({ ranking, matches, userBets, loggedUser, handleOpenM
                     <span className="w-6 text-center text-base flex-shrink-0">
                       {i < 3 ? medals[i] : <span className="text-xs text-gray-500 font-bold">{i + 1}º</span>}
                     </span>
-                    <span className={`flex-1 text-sm font-semibold truncate ${isMe ? 'text-neon-green' : 'text-white'}`}>{name}</span>
+                    <div className="flex-1 flex flex-col">
+                        <span className={`text-sm font-semibold truncate ${isMe ? 'text-neon-green' : 'text-white'}`}>{name}</span>
+                        <div className="flex items-center gap-1.5 mt-0.5">
+                            <span className="text-[9px] bg-yellow-400/10 text-yellow-500 px-1.5 py-0.5 rounded-full border border-yellow-400/20 font-bold">🎯 {u.cravadas || 0}</span>
+                            <span className="text-[9px] bg-neon-green/10 text-neon-green px-1.5 py-0.5 rounded-full border border-neon-green/20 font-bold">✓ {u.acertos || 0}</span>
+                            <span className="text-[10px] ml-1 font-black">
+                                {u.trend === 'UP' && <span className="text-neon-green">↑</span>}
+                                {u.trend === 'DOWN' && <span className="text-red-500">↓</span>}
+                                {(!u.trend || u.trend === 'SAME') && <span className="text-dark-600">-</span>}
+                            </span>
+                        </div>
+                    </div>
                     <span className={`text-sm font-black flex-shrink-0 ${isMe ? 'text-neon-green' : 'text-white'}`}>{u.total_points}<span className="text-xs text-gray-500 font-normal">pts</span></span>
                   </div>
                 );
@@ -878,7 +912,18 @@ function PersonalDashboard({ ranking, matches, userBets, loggedUser, handleOpenM
                   <div className="text-center text-gray-600 text-xs py-1">···</div>
                   <div className="flex items-center gap-2 px-2 py-2 rounded-xl bg-neon-green/10 border border-neon-green/30">
                     <span className="w-6 text-center text-xs text-neon-green font-black flex-shrink-0">{userRankPos + 1}º</span>
-                    <span className="flex-1 text-sm font-semibold truncate text-neon-green">{firstName}</span>
+                    <div className="flex-1 flex flex-col">
+                        <span className="text-sm font-semibold truncate text-neon-green">{firstName}</span>
+                        <div className="flex items-center gap-1.5 mt-0.5">
+                            <span className="text-[9px] bg-yellow-400/10 text-yellow-500 px-1.5 py-0.5 rounded-full border border-yellow-400/20 font-bold">🎯 {userRankData.cravadas || 0}</span>
+                            <span className="text-[9px] bg-neon-green/10 text-neon-green px-1.5 py-0.5 rounded-full border border-neon-green/20 font-bold">✓ {userRankData.acertos || 0}</span>
+                            <span className="text-[10px] ml-1 font-black">
+                                {userRankData.trend === 'UP' && <span className="text-neon-green">↑</span>}
+                                {userRankData.trend === 'DOWN' && <span className="text-red-500">↓</span>}
+                                {(!userRankData.trend || userRankData.trend === 'SAME') && <span className="text-dark-600">-</span>}
+                            </span>
+                        </div>
+                    </div>
                     <span className="text-sm font-black text-neon-green flex-shrink-0">{myPoints}<span className="text-xs text-gray-500 font-normal">pts</span></span>
                   </div>
                 </>

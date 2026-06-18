@@ -9,7 +9,7 @@ from .serializers import BetSerializer, RankingSerializer, UserSerializer
 # pyrefly: ignore [missing-import]
 from django.contrib.auth.models import User
 # pyrefly: ignore [missing-import]
-from django.db.models import Sum
+from django.db.models import Sum, Count, Q
 from django.db.models.functions import Coalesce
 
 # Usamos ModelViewSet porque aqui queremos o pacote completo: 
@@ -69,8 +69,10 @@ class RankingListView(generics.ListAPIView):
         # O 'annotate' cria uma coluna temporária 'total_points' que soma o 'points_earned' dos palpites
         # O '-total_points' no order_by garante que o maior venha primeiro (ordem decrescente)
         return User.objects.annotate(
-            total_points=Coalesce(Sum('bets__points_earned'), 0)
-        ).order_by('-total_points')    
+            total_points=Coalesce(Sum('bets__points_earned'), 0),
+            cravadas=Count('bets', filter=Q(bets__points_earned=5)),
+            acertos=Count('bets', filter=Q(bets__points_earned=3))
+        ).order_by('-total_points', '-cravadas', '-acertos', 'id')    
 
 class RegisterView(APIView):
     """Endpoint para cadastro de novos usuários no bolão"""

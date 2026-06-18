@@ -15,11 +15,13 @@ class BetSerializer(serializers.ModelSerializer):
 class RankingSerializer(serializers.ModelSerializer):
     # Declaramos um campo virtual que será gerado pela View
     total_points = serializers.IntegerField(read_only=True)
+    cravadas = serializers.IntegerField(read_only=True)
+    acertos = serializers.IntegerField(read_only=True)
     trend = serializers.SerializerMethodField()
 
     class Meta:
         model = User
-        fields = ['id', 'username', 'first_name', 'last_name', 'total_points', 'trend']
+        fields = ['id', 'username', 'first_name', 'last_name', 'total_points', 'cravadas', 'acertos', 'trend']
 
     def get_trend(self, obj):
         if not hasattr(obj, 'profile'):
