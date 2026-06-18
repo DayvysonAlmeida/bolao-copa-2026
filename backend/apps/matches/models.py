@@ -72,3 +72,9 @@ class Match(models.Model):
                 if bet.points_earned != pontos:
                     bet.points_earned = pontos
                     bet.save()    
+        else:
+            # Reseta os pontos se a partida voltou para PENDING ou não tem placar
+            for bet in self.bets.all():
+                if bet.points_earned != 0:
+                    bet.points_earned = 0
+                    bet.save()
