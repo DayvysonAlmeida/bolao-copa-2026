@@ -18,6 +18,6 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS(f"Pontuação de {count} jogos conferida e limpa!"))
         
         self.stdout.write(self.style.WARNING("Atualizando ranking e setas de tendência..."))
-        update_ranking_positions()
+        update_ranking_positions(is_resync=True)
         
         self.stdout.write(self.style.SUCCESS("Sincronização profunda concluída com sucesso! Todos os dados estão 100% corretos."))
