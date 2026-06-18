@@ -135,7 +135,7 @@ export function ComparatorTab({ matches, ranking, loggedUser, API_URL, accessTok
                                 <span className="font-bold text-gray-200 text-sm truncate">{match.home_team_name}</span>
                             </div>
                             <span className="text-2xl font-black text-white px-2">
-                                {(match.status === 'FINISHED' || match.status === 'IN_PROGRESS') ? `${match.home_score} × ${match.away_score}` : '×'}
+                                {(match.status === 'FINISHED' || match.status === 'IN_PROGRESS') ? `${match.home_score ?? 0} × ${match.away_score ?? 0}` : '×'}
                             </span>
                             <div className="flex items-center justify-end gap-3 w-28">
                                 <span className="font-bold text-gray-200 text-sm truncate text-right">{match.away_team_name}</span>
