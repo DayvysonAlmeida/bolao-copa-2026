@@ -1,4 +1,31 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, Component } from 'react';
+
+class DashboardErrorBoundary extends Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, error: null, info: null };
+  }
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
+  componentDidCatch(error, info) {
+    console.error("DashboardErrorBoundary caught an error", error, info);
+    this.setState({ error, info });
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="p-8 bg-red-900/20 border border-red-500 rounded-xl m-4 text-white">
+          <h2 className="text-xl font-bold text-red-400 mb-4">CRASH DO DASHBOARD:</h2>
+          <pre className="text-xs bg-dark-900 p-4 rounded overflow-auto">{this.state.error && this.state.error.toString()}</pre>
+          <pre className="text-[10px] text-gray-400 mt-4 overflow-auto">{this.state.info && this.state.info.componentStack}</pre>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 
 // ─── Gráfico de linha SVG ─────────────────────────────────────────────────────
 function LineChart({ labels, series }) {
@@ -501,6 +528,9 @@ function PublicDashboard({ ranking, matches, setActiveTab, setShowLoginModal, st
 function PersonalDashboard({ ranking, matches, userBets, loggedUser, handleOpenModal, setActiveTab, API_URL, accessToken, stats }) {
   const [selectedGroup, setSelectedGroup] = useState('A');
   const [leaderBets, setLeaderBets] = useState([]);
+  const [secadorIndex, setSecadorIndex] = useState(0);
+  const [withoutBetIndex, setWithoutBetIndex] = useState(0);
+  const [nextBetIndex, setNextBetIndex] = useState(0);
 
   const userRankPos = ranking.findIndex(u => u.id === loggedUser.id);
   const userRankData = userRankPos >= 0 ? ranking[userRankPos] : null;
@@ -567,24 +597,32 @@ function PersonalDashboard({ ranking, matches, userBets, loggedUser, handleOpenM
     .slice(0, 4)
     .map(b => ({ ...b, matchData: matches.find(m => m.id === b.match) }));
 
-  // Próximos sem palpite
-  const nextWithoutBet = matches
+  // Secador do Líder: Próximos jogos simultâneos (PENDING) com o palpite do líder
+  const pendingWithLeaderBet = matches
+    .filter(m => m.status === 'PENDING' && leaderBets.find(b => b.match === m.id))
+    .sort((a, b) => new Date(a.match_date) - new Date(b.match_date));
+  const secadorLeaderGames = [];
+  if (pendingWithLeaderBet.length > 0) {
+    const nextTimeMs = new Date(pendingWithLeaderBet[0].match_date).getTime();
+    secadorLeaderGames.push(...pendingWithLeaderBet.filter(m => new Date(m.match_date).getTime() === nextTimeMs));
+  }
+
+  // Próximos sem palpite (todos os próximos simultâneos)
+  const nextWithoutBetAll = matches
     .filter(m => m.status === 'PENDING' && !userBets.find(b => b.match === m.id))
-    .sort((a, b) => new Date(a.match_date) - new Date(b.match_date))
-    .slice(0, 3);
+    .sort((a, b) => new Date(a.match_date) - new Date(b.match_date));
 
   // Banner de Urgência (Jogos nas próximas 12h sem palpite)
   const now = new Date();
-  const urgentMatches = nextWithoutBet.filter(m => {
+  const urgentMatches = nextWithoutBetAll.filter(m => {
     const hoursLeft = (new Date(m.match_date) - now) / 3600000;
     return hoursLeft > 0 && hoursLeft <= 12;
   });
 
   // Próximos com palpite
-  const nextWithBet = matches
+  const nextWithBetAll = matches
     .filter(m => m.status === 'PENDING' && userBets.find(b => b.match === m.id))
-    .sort((a, b) => new Date(a.match_date) - new Date(b.match_date))
-    .slice(0, 3);
+    .sort((a, b) => new Date(a.match_date) - new Date(b.match_date));
 
   // Gráfico de evolução top 3 + eu
   const chartLabels = ['R1', 'R2', 'R3', 'R4', 'R5', 'R6', 'R7', 'R8'];
@@ -716,6 +754,8 @@ function PersonalDashboard({ ranking, matches, userBets, loggedUser, handleOpenM
         </div>
       )}
 
+
+
       {/* ── Jogos ao vivo (com meu palpite destacado) ─────────────────── */}
       {liveMatches.length > 0 && (
         <div className="bg-dark-800 border border-red-500/40 rounded-2xl p-4">
@@ -825,42 +865,60 @@ function PersonalDashboard({ ranking, matches, userBets, loggedUser, handleOpenM
           </div>
         </div>
 
-        {/* Secador do Líder */}
-        {!isLeader && nextWithBet.length > 0 && top5.length > 0 && (
+        {/* Secador do Líder (Menor) */}
+        {!isLeader && leaderId && secadorLeaderGames.length > 0 && top5.length > 0 && (
           <div className="flex-1 min-w-[280px] bg-dark-800 border border-blue-500/20 rounded-2xl p-4 bg-gradient-to-br from-dark-800 to-blue-900/10">
             <div className="flex items-center gap-2 mb-4">
               <span className="text-lg">👀</span>
               <h3 className="font-bold text-blue-400 text-sm uppercase tracking-wider">Secador do Líder</h3>
             </div>
             {(() => {
-              const nextM = nextWithBet[0]; // Próximo jogo que o usuário palpitou
-              const myB = userBets.find(b => b.match === nextM.id);
-              const leaderB = leaderBets.find(b => b.match === nextM.id);
+              const isSimul = secadorLeaderGames.length > 1;
+              const curIdx = secadorIndex >= secadorLeaderGames.length ? 0 : secadorIndex;
+              const nextM = secadorLeaderGames[curIdx];
+              if (!nextM) return null;
+
+              const myB = userBets.find(b => b.match === nextM.id) || {};
+              const leaderB = leaderBets.find(b => b.match === nextM.id) || {};
+              
               return (
                 <div className="flex flex-col gap-3">
-                  <div className="flex items-center justify-center gap-2 mb-2">
-                    {nextM.flag_home && <img src={nextM.flag_home} className="w-5 h-3 object-cover rounded-sm" alt="" />}
-                    <span className="text-xs text-gray-400 font-bold uppercase">{nextM.home_team_name} x {nextM.away_team_name}</span>
-                    {nextM.flag_away && <img src={nextM.flag_away} className="w-5 h-3 object-cover rounded-sm" alt="" />}
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center justify-center gap-2 flex-1">
+                      {nextM.flag_home && <img src={nextM.flag_home} className="w-5 h-3 object-cover rounded-sm" alt="" />}
+                      <span className="text-xs text-gray-400 font-bold uppercase">{nextM.home_team_name} x {nextM.away_team_name}</span>
+                      {nextM.flag_away && <img src={nextM.flag_away} className="w-5 h-3 object-cover rounded-sm" alt="" />}
+                    </div>
+                    {isSimul && (
+                      <div className="flex items-center justify-center gap-1.5 bg-dark-900/50 px-2 py-0.5 rounded-lg border border-blue-500/30">
+                        <button onClick={() => setSecadorIndex(prev => prev > 0 ? prev - 1 : secadorLeaderGames.length - 1)} className="text-blue-400 hover:text-white transition-colors">◀</button>
+                        <span className="text-[10px] text-blue-400 font-bold">{curIdx + 1}/{secadorLeaderGames.length}</span>
+                        <button onClick={() => setSecadorIndex(prev => prev < secadorLeaderGames.length - 1 ? prev + 1 : 0)} className="text-blue-400 hover:text-white transition-colors">▶</button>
+                      </div>
+                    )}
                   </div>
                   <div className="grid grid-cols-2 gap-4">
-                    <div className="border border-neon-green/30 bg-neon-green/5 rounded-xl p-3 text-center">
+                    <div className="border border-neon-green/30 bg-neon-green/5 rounded-xl p-3 text-center flex flex-col justify-center">
                       <p className="text-[10px] text-gray-500 font-bold uppercase mb-1">O seu palpite</p>
-                      <p className="text-2xl font-black text-white">{myB.home_score} x {myB.away_score}</p>
+                      {myB.match ? (
+                         <p className="text-2xl font-black text-white">{myB.home_score} x {myB.away_score}</p>
+                      ) : (
+                         <p className="text-xs text-gray-400 mt-2 italic">Ainda não palpitou</p>
+                      )}
                     </div>
-                    <div className="border border-blue-500/30 bg-blue-500/5 rounded-xl p-3 text-center relative overflow-hidden">
+                    <div className="border border-blue-500/30 bg-blue-500/5 rounded-xl p-3 text-center flex flex-col justify-center relative overflow-hidden">
                       <p className="text-[10px] text-gray-500 font-bold uppercase mb-1">Palpite de {top5[0].first_name || top5[0].username}</p>
-                      {leaderB ? (
+                      {leaderB.match ? (
                         <p className="text-2xl font-black text-white">{leaderB.home_score} x {leaderB.away_score}</p>
                       ) : (
                         <p className="text-xs text-gray-400 mt-2 italic">Ainda não palpitou</p>
                       )}
                     </div>
                   </div>
-                  {leaderB && myB.home_score === leaderB.home_score && myB.away_score === leaderB.away_score && (
+                  {leaderB.match && myB.match && myB.home_score === leaderB.home_score && myB.away_score === leaderB.away_score && (
                     <p className="text-[10px] text-yellow-500 text-center mt-1">Vocês colocaram o mesmo placar! Ninguém ganha vantagem.</p>
                   )}
-                  {leaderB && (myB.home_score !== leaderB.home_score || myB.away_score !== leaderB.away_score) && (
+                  {leaderB.match && myB.match && (myB.home_score !== leaderB.home_score || myB.away_score !== leaderB.away_score) && (
                     <p className="text-[10px] text-neon-green text-center mt-1 font-bold">Chance de tirar a diferença! Torça contra!</p>
                   )}
                 </div>
@@ -946,14 +1004,33 @@ function PersonalDashboard({ ranking, matches, userBets, loggedUser, handleOpenM
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
 
         {/* Jogos sem palpite */}
-        {nextWithoutBet.length > 0 && (
+        {nextWithoutBetAll.length > 0 && (
           <div className="lg:col-span-4 bg-dark-800 border border-yellow-400/20 rounded-2xl p-4">
-            <h3 className="font-bold text-yellow-400 text-sm uppercase tracking-wider mb-3">⚠️ Ainda sem palpite!</h3>
-            <div className="flex flex-col gap-2">
-              {nextWithoutBet.map(m => (
-                <MatchRow key={m.id} match={m} onClick={() => handleOpenModal(m)} />
-              ))}
-            </div>
+            {(() => {
+              const nextTimeMs = new Date(nextWithoutBetAll[0].match_date).getTime();
+              const simultaneous = nextWithoutBetAll.filter(m => new Date(m.match_date).getTime() === nextTimeMs);
+              const isSimul = simultaneous.length > 1;
+              const curIdx = withoutBetIndex >= simultaneous.length ? 0 : withoutBetIndex;
+              const m = simultaneous[curIdx];
+              if (!m) return null;
+              return (
+                <>
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="font-bold text-yellow-400 text-sm uppercase tracking-wider">⚠️ Ainda sem palpite!</h3>
+                    {isSimul && (
+                      <div className="flex items-center gap-1.5 bg-yellow-400/10 px-2 py-0.5 rounded-lg border border-yellow-400/20">
+                        <button onClick={() => setWithoutBetIndex(prev => prev > 0 ? prev - 1 : simultaneous.length - 1)} className="text-yellow-500 hover:text-white transition-colors">◀</button>
+                        <span className="text-[10px] text-yellow-500 font-bold">{curIdx + 1}/{simultaneous.length}</span>
+                        <button onClick={() => setWithoutBetIndex(prev => prev < simultaneous.length - 1 ? prev + 1 : 0)} className="text-yellow-500 hover:text-white transition-colors">▶</button>
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    <MatchRow key={m.id} match={m} onClick={() => handleOpenModal(m)} />
+                  </div>
+                </>
+              );
+            })()}
             <button onClick={() => setActiveTab('matches')} className="mt-3 w-full py-2 rounded-xl bg-yellow-400/10 border border-yellow-400/30 text-yellow-400 text-xs font-bold hover:bg-yellow-400/20 transition-all">
               Palpitar agora ⚽
             </button>
@@ -961,19 +1038,38 @@ function PersonalDashboard({ ranking, matches, userBets, loggedUser, handleOpenM
         )}
 
         {/* Jogos com palpite */}
-        {nextWithBet.length > 0 && (
+        {nextWithBetAll.length > 0 && (
           <div className="lg:col-span-4 bg-dark-800 border border-neon-green/20 rounded-2xl p-4">
-            <h3 className="font-bold text-neon-green text-sm uppercase tracking-wider mb-3">✅ Seus próximos palpites</h3>
-            <div className="flex flex-col gap-2">
-              {nextWithBet.map(m => (
-                <MatchRow key={m.id} match={m} userBet={userBets.find(b => b.match === m.id)} showBet onClick={() => handleOpenModal(m)} />
-              ))}
-            </div>
+            {(() => {
+              const nextTimeMs = new Date(nextWithBetAll[0].match_date).getTime();
+              const simultaneous = nextWithBetAll.filter(m => new Date(m.match_date).getTime() === nextTimeMs);
+              const isSimul = simultaneous.length > 1;
+              const curIdx = nextBetIndex >= simultaneous.length ? 0 : nextBetIndex;
+              const m = simultaneous[curIdx];
+              if (!m) return null;
+              return (
+                <>
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="font-bold text-neon-green text-sm uppercase tracking-wider">✅ Próximos palpites</h3>
+                    {isSimul && (
+                      <div className="flex items-center gap-1.5 bg-neon-green/10 px-2 py-0.5 rounded-lg border border-neon-green/20">
+                        <button onClick={() => setNextBetIndex(prev => prev > 0 ? prev - 1 : simultaneous.length - 1)} className="text-neon-green hover:text-white transition-colors">◀</button>
+                        <span className="text-[10px] text-neon-green font-bold">{curIdx + 1}/{simultaneous.length}</span>
+                        <button onClick={() => setNextBetIndex(prev => prev < simultaneous.length - 1 ? prev + 1 : 0)} className="text-neon-green hover:text-white transition-colors">▶</button>
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    <MatchRow key={m.id} match={m} userBet={userBets.find(b => b.match === m.id)} showBet onClick={() => handleOpenModal(m)} />
+                  </div>
+                </>
+              );
+            })()}
           </div>
         )}
 
         {/* Grupos */}
-        <div className={`${(nextWithoutBet.length > 0 && nextWithBet.length > 0) ? 'lg:col-span-4' : nextWithoutBet.length > 0 || nextWithBet.length > 0 ? 'lg:col-span-8' : 'lg:col-span-12'} bg-dark-800 border border-dark-700 rounded-2xl p-4`}>
+        <div className={`${(nextWithoutBetAll.length > 0 && nextWithBetAll.length > 0) ? 'lg:col-span-4' : nextWithoutBetAll.length > 0 || nextWithBetAll.length > 0 ? 'lg:col-span-8' : 'lg:col-span-12'} bg-dark-800 border border-dark-700 rounded-2xl p-4`}>
           <div className="flex items-center justify-between mb-3">
             <h3 className="font-bold text-white text-sm uppercase tracking-wider">🗂 Classificação dos Grupos</h3>
             {groups.length > 0 && (
