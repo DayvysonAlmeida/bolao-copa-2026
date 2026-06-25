@@ -1,5 +1,13 @@
 from django.contrib import admin
-from .models import Bet
+from .models import Bet, BolaoParticipant
+
+
+@admin.register(BolaoParticipant)
+class BolaoParticipantAdmin(admin.ModelAdmin):
+    list_display = ('user', 'bolao', 'confirmed', 'current_position', 'current_points', 'joined_at')
+    list_filter = ('bolao', 'confirmed')
+    list_editable = ('confirmed',)
+    search_fields = ('user__username', 'user__first_name')
 
 @admin.register(Bet)
 class BetAdmin(admin.ModelAdmin):

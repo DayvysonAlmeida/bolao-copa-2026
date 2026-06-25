@@ -12,14 +12,64 @@ export function RankingTab({ ranking, loggedUser, userRankPosition }) {
                 Você está em <span className="font-semibold">{userRankPosition + 1}º</span> lugar com <span className="font-semibold">{ranking[userRankPosition].total_points}</span> pts.
               </div>
             )}
+            {/* Pódio Visual (Top 3) */}
+            {ranking.length > 0 && (
+              <div className="flex items-end justify-center h-44 gap-2 mb-8 mt-4">
+                {/* 2º Lugar */}
+                {ranking[1] && (
+                  <div className="flex flex-col items-center w-1/3 animate-[slideUp_0.5s_ease-out]">
+                    <span className="text-sm font-bold text-gray-300 truncate w-full text-center px-1">{ranking[1].first_name || ranking[1].username}</span>
+                    <span className="text-[10px] font-black text-white mb-1">{ranking[1].total_points} pts</span>
+                    <div className="flex items-center gap-1 mb-1">
+                        <span className="text-[8px] bg-yellow-400/10 text-yellow-500 px-1.5 py-0.5 rounded border border-yellow-400/20 font-bold" title="Cravadas">🎯 {ranking[1].cravadas || 0}</span>
+                        <span className="text-[8px] bg-neon-green/10 text-neon-green px-1.5 py-0.5 rounded border border-neon-green/20 font-bold" title="Acertos">✓ {ranking[1].acertos || 0}</span>
+                    </div>
+                    <div className="w-full bg-gradient-to-t from-dark-700 to-dark-600 rounded-t-xl h-20 border-t-2 border-gray-400 flex items-start justify-center pt-2">
+                      <span className="text-2xl">🥈</span>
+                    </div>
+                  </div>
+                )}
+                {/* 1º Lugar */}
+                {ranking[0] && (
+                  <div className="flex flex-col items-center w-1/3 z-10 animate-[slideUp_0.7s_ease-out]">
+                    <span className="text-2xl mb-1 animate-bounce">👑</span>
+                    <span className="text-sm font-bold text-yellow-400 truncate w-full text-center px-1">{ranking[0].first_name || ranking[0].username}</span>
+                    <span className="text-[10px] font-black text-white mb-1">{ranking[0].total_points} pts</span>
+                    <div className="flex items-center gap-1 mb-1">
+                        <span className="text-[8px] bg-yellow-400/10 text-yellow-500 px-1.5 py-0.5 rounded border border-yellow-400/20 font-bold" title="Cravadas">🎯 {ranking[0].cravadas || 0}</span>
+                        <span className="text-[8px] bg-neon-green/10 text-neon-green px-1.5 py-0.5 rounded border border-neon-green/20 font-bold" title="Acertos">✓ {ranking[0].acertos || 0}</span>
+                    </div>
+                    <div className="w-full bg-gradient-to-t from-yellow-500/20 to-yellow-500/40 rounded-t-xl h-28 border-t-2 border-yellow-400 flex items-start justify-center pt-2 shadow-[0_-5px_20px_rgba(250,204,21,0.2)]">
+                      <span className="text-2xl">🥇</span>
+                    </div>
+                  </div>
+                )}
+                {/* 3º Lugar */}
+                {ranking[2] && (
+                  <div className="flex flex-col items-center w-1/3 animate-[slideUp_0.6s_ease-out]">
+                    <span className="text-sm font-bold text-orange-400 truncate w-full text-center px-1">{ranking[2].first_name || ranking[2].username}</span>
+                    <span className="text-[10px] font-black text-white mb-1">{ranking[2].total_points} pts</span>
+                    <div className="flex items-center gap-1 mb-1">
+                        <span className="text-[8px] bg-yellow-400/10 text-yellow-500 px-1.5 py-0.5 rounded border border-yellow-400/20 font-bold" title="Cravadas">🎯 {ranking[2].cravadas || 0}</span>
+                        <span className="text-[8px] bg-neon-green/10 text-neon-green px-1.5 py-0.5 rounded border border-neon-green/20 font-bold" title="Acertos">✓ {ranking[2].acertos || 0}</span>
+                    </div>
+                    <div className="w-full bg-gradient-to-t from-orange-900/40 to-orange-800/40 rounded-t-xl h-16 border-t-2 border-orange-500 flex items-start justify-center pt-2">
+                      <span className="text-2xl">🥉</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* Cabeçalho da Tabela */}
             <div className="flex items-center justify-between px-4 pb-4 mb-2 border-b border-dark-700 text-sm font-bold text-gray-400 uppercase tracking-wider">
               <span>Posição / Jogador</span>
               <span>Pontos</span>
             </div>
 
-            {/* Lista de Usuários */}
-            {ranking.map((user, index) => {
+            {/* Lista de Usuários (Pula o Top 3 se o pódio estiver visível) */}
+            {ranking.slice(ranking.length > 0 ? 3 : 0).map((user, idx) => {
+              const index = ranking.length > 0 ? idx + 3 : idx;
               // Lógica visual para o pódio
               const isFirst = index === 0;
               const isSecond = index === 1;

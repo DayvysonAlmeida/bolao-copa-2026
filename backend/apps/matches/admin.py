@@ -1,5 +1,13 @@
 from django.contrib import admin
-from .models import Team, Match
+from .models import Team, Match, Bolao
+
+
+@admin.register(Bolao)
+class BolaoAdmin(admin.ModelAdmin):
+    list_display = ('name', 'status', 'scoring_mode', 'is_active', 'allow_registration', 'created_at')
+    list_filter = ('status', 'scoring_mode', 'is_active')
+    list_editable = ('status', 'is_active', 'allow_registration')
+    search_fields = ('name',)
 
 @admin.register(Team)
 class TeamAdmin(admin.ModelAdmin):

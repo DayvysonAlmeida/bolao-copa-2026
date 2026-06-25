@@ -130,8 +130,16 @@ function MatchRow({ match, userBet, onClick, showBet = false }) {
             <span className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse" />AO VIVO
           </span>
         )}
+        {match.penalty_winner_name && (
+          <span className="text-[8px] text-yellow-400 bg-yellow-400/10 px-1 py-0.5 rounded uppercase font-bold mt-1">
+            Pen: {match.penalty_winner_name}
+          </span>
+        )}
         {showBet && userBet && (
-          <span className="text-[9px] text-neon-green/80 mt-0.5">Palpite: {userBet.home_score}×{userBet.away_score}</span>
+          <span className="text-[9px] text-neon-green/80 mt-0.5 flex flex-col items-center">
+            <span>Palpite: {userBet.home_score}×{userBet.away_score}</span>
+            {userBet.penalty_winner_name && <span className="text-[8px] text-yellow-400">Classifica: {userBet.penalty_winner_name}</span>}
+          </span>
         )}
       </div>
 
@@ -175,357 +183,9 @@ function StatCard({ icon, label, value, sub, color = 'neon-green', highlight = f
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// DASHBOARD PÚBLICO (visitante)
-// ═══════════════════════════════════════════════════════════════════════════════
-function PublicDashboard({ ranking, matches, setActiveTab, setShowLoginModal, stats }) {
-  const [selectedGroup, setSelectedGroup] = useState('A');
-
-  const liveMatches = matches.filter(m => m.status === 'IN_PROGRESS');
-  const finishedMatchesAll = matches.filter(m => m.status === 'FINISHED')
-    .sort((a, b) => new Date(b.match_date) - new Date(a.match_date));
-  const finishedMatches = finishedMatchesAll.slice(0, 5);
-  const upcomingMatches = matches.filter(m => m.status === 'PENDING')
-    .sort((a, b) => new Date(a.match_date) - new Date(b.match_date))
-    .slice(0, 4);
-
-  // Tendências e Goleada
-  let homeWins = 0, awayWins = 0, draws = 0;
-  let maxGoalsMatch = null, maxGoals = -1;
-  finishedMatchesAll.forEach(m => {
-    if (m.home_score > m.away_score) homeWins++;
-    else if (m.home_score < m.away_score) awayWins++;
-    else draws++;
-    const tg = m.home_score + m.away_score;
-    if (tg > maxGoals) { maxGoals = tg; maxGoalsMatch = m; }
-  });
-  const totalFinishedTrend = homeWins + awayWins + draws || 1;
-  const trendSlices = [
-    { pct: (homeWins / totalFinishedTrend) * 100, label: 'Casa' },
-    { pct: (draws / totalFinishedTrend) * 100, label: 'Empate' },
-    { pct: (awayWins / totalFinishedTrend) * 100, label: 'Fora' }
-  ];
-  const top5 = ranking.slice(0, 5);
-  const groups = [...new Set(matches.map(m => m.group).filter(Boolean))].sort();
-
-  // Inicializa grupo selecionado com o primeiro disponível
-  const activeGroup = groups.includes(selectedGroup) ? selectedGroup : (groups[0] || 'A');
-  const groupMatchesDone = matches.filter(m => m.group === activeGroup && (m.status === 'FINISHED' || m.status === 'IN_PROGRESS'));
-
-  // Classificação do grupo selecionado
-  const groupTable = useMemo(() => {
-    const teams = {};
-    matches.filter(m => m.group === activeGroup).forEach(m => {
-      if (!teams[m.home_team_name]) teams[m.home_team_name] = { flag: m.flag_home, J: 0, V: 0, E: 0, D: 0, GP: 0, GC: 0, PTS: 0 };
-      if (!teams[m.away_team_name]) teams[m.away_team_name] = { flag: m.flag_away, J: 0, V: 0, E: 0, D: 0, GP: 0, GC: 0, PTS: 0 };
-    });
-    groupMatchesDone.forEach(m => {
-      if (m.home_score === null || m.away_score === null) return;
-      [
-        [m.home_team_name, m.home_score, m.away_score],
-        [m.away_team_name, m.away_score, m.home_score]
-      ].forEach(([name, gp, gc]) => {
-        teams[name].J++; teams[name].GP += gp; teams[name].GC += gc;
-      });
-      if (m.home_score > m.away_score) { teams[m.home_team_name].V++; teams[m.home_team_name].PTS += 3; teams[m.away_team_name].D++; }
-      else if (m.home_score < m.away_score) { teams[m.away_team_name].V++; teams[m.away_team_name].PTS += 3; teams[m.home_team_name].D++; }
-      else { teams[m.home_team_name].E++; teams[m.home_team_name].PTS++; teams[m.away_team_name].E++; teams[m.away_team_name].PTS++; }
-    });
-    return Object.entries(teams)
-      .map(([name, s]) => ({ name, ...s, SG: s.GP - s.GC }))
-      .sort((a, b) => b.PTS - a.PTS || b.SG - a.SG || b.GP - a.GP);
-  }, [activeGroup, matches]);
-
-  // Stats gerais
-  const totalMatches = matches.length;
-  const finishedCount = matches.filter(m => m.status === 'FINISHED').length;
-  const liveCount = liveMatches.length;
-  const totalParticipants = ranking.length;
-
-  return (
-    <div className="max-w-[1400px] mx-auto animate-fadeIn space-y-4">
-
-      {/* ── Hero Banner ───────────────────────────────────────────────── */}
-      <div className="rounded-2xl border border-neon-green/20 bg-gradient-to-br from-neon-green/10 via-dark-800 to-dark-800 p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div>
-          <p className="text-neon-green text-xs font-bold uppercase tracking-widest mb-1">Acompanhe em tempo real</p>
-          <h2 className="text-2xl font-black text-white">🏆 Bolão <span className="text-neon-green">Copa 2026</span></h2>
-          <p className="text-gray-400 text-sm mt-1">
-            {totalParticipants} participantes · {finishedCount}/{totalMatches} jogos realizados
-            {liveCount > 0 && <span className="ml-2 text-red-400 font-bold animate-pulse">⚡ {liveCount} ao vivo!</span>}
-          </p>
-        </div>
-        <div className="flex gap-2">
-          <button
-            onClick={() => setShowLoginModal(true)}
-            className="px-5 py-2.5 rounded-full bg-neon-green text-dark-900 font-black text-sm hover:shadow-[0_0_20px_rgba(4,211,97,0.5)] transition-all hover:scale-105 active:scale-95"
-          >
-            Entrar e palpitar ⚽
-          </button>
-          <button
-            onClick={() => setActiveTab('matches')}
-            className="px-5 py-2.5 rounded-full border border-neon-green/30 text-neon-green font-bold text-sm hover:bg-neon-green/10 transition-all"
-          >
-            Ver jogos
-          </button>
-        </div>
-      </div>
-
-      {/* ── Cards resumo ──────────────────────────────────────────────── */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <StatCard icon="🌍" label="Total de Jogos" value={totalMatches} sub="na Copa 2026" color="blue" />
-        <StatCard icon="✅" label="Realizados" value={finishedCount} sub={`${totalMatches - finishedCount} restantes`} color="neon-green" />
-        <StatCard icon="👥" label="Participantes" value={totalParticipants} sub="no bolão" color="yellow" />
-        <StatCard icon={liveCount > 0 ? "🔴" : "⏰"} label={liveCount > 0 ? "Jogos Ao Vivo" : "Próximos Jogos"} value={liveCount > 0 ? liveCount : upcomingMatches.length} sub={liveCount > 0 ? "acontecendo agora!" : "agendados"} color={liveCount > 0 ? "red" : "purple"} highlight />
-      </div>
-
-      {/* ── Estatísticas da Galera ────────────────────────────────────── */}
-      {stats && (
-        <div className="bg-dark-800 border border-dark-700 rounded-2xl p-4">
-          <h3 className="font-bold text-white text-sm uppercase tracking-wider mb-3">📊 Estatísticas da Galera</h3>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            <div className="p-3 bg-dark-900 rounded-xl border border-dark-700">
-              <p className="text-[10px] text-gray-500 uppercase">Maior Vidente</p>
-              <p className="text-sm font-bold text-yellow-400 truncate" title={stats.top_scorer}>{stats.top_scorer}</p>
-            </div>
-            <div className="p-3 bg-dark-900 rounded-xl border border-dark-700">
-              <p className="text-[10px] text-gray-500 uppercase">Mais Seguro</p>
-              <p className="text-sm font-bold text-neon-green truncate" title={stats.safest_player}>{stats.safest_player}</p>
-            </div>
-            <div className="p-3 bg-dark-900 rounded-xl border border-dark-700">
-              <p className="text-[10px] text-gray-500 uppercase">🏮 Lanterna</p>
-              <p className="text-sm font-bold text-red-400 truncate" title={stats.lanterna}>{stats.lanterna}</p>
-            </div>
-            <div className="p-3 bg-dark-900 rounded-xl border border-dark-700">
-              <p className="text-[10px] text-gray-500 uppercase">Média de Pontos</p>
-              <p className="text-sm font-bold text-white truncate">{stats.media_pontos} pts</p>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ── Linha principal ───────────────────────────────────────────── */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
-
-        {/* Coluna esquerda: Gráficos + Jogos */}
-        <div className="lg:col-span-4 flex flex-col gap-4">
-
-          {/* Tendências */}
-          <div className="bg-dark-800 border border-dark-700 rounded-2xl p-4">
-            <h3 className="font-bold text-white text-sm uppercase tracking-wider mb-4">📊 Tendências da Copa</h3>
-            {finishedMatchesAll.length > 0 ? (
-              <div className="flex items-center gap-4">
-                <div className="w-24 h-24 flex-shrink-0">
-                  <DonutChart slices={trendSlices} size={96} />
-                </div>
-                <div className="flex flex-col gap-2 flex-1">
-                  <div className="flex justify-between text-xs"><div className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-neon-green"></span><span className="text-gray-300">Mandante</span></div><span className="font-bold">{homeWins}</span></div>
-                  <div className="flex justify-between text-xs"><div className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-yellow-400"></span><span className="text-gray-300">Empate</span></div><span className="font-bold">{draws}</span></div>
-                  <div className="flex justify-between text-xs"><div className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-blue-500"></span><span className="text-gray-300">Visitante</span></div><span className="font-bold">{awayWins}</span></div>
-                </div>
-              </div>
-            ) : <p className="text-center text-gray-500 text-sm py-4">Sem dados.</p>}
-          </div>
-
-          {/* Goleada */}
-          {maxGoalsMatch && maxGoals > 0 && (
-            <div className="bg-dark-800 border border-dark-700 rounded-2xl p-4 bg-gradient-to-br from-dark-800 to-purple-900/10">
-              <h3 className="font-bold text-purple-400 text-xs uppercase tracking-wider mb-3">🔥 Jogo Mais Emocionante</h3>
-              <MatchRow match={maxGoalsMatch} onClick={() => { }} />
-            </div>
-          )}
-
-          {/* Jogos ao vivo */}
-          {liveMatches.length > 0 && (
-            <div className="bg-dark-800 border border-red-500/30 rounded-2xl p-4">
-              <div className="flex items-center gap-2 mb-3">
-                <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
-                <h3 className="font-bold text-red-400 text-sm uppercase tracking-wider">Ao Vivo Agora</h3>
-              </div>
-              <div className="flex flex-col gap-2">
-                {liveMatches.map(m => <MatchRow key={m.id} match={m} onClick={() => { }} />)}
-              </div>
-            </div>
-          )}
-
-          {/* Últimos jogos */}
-          <div className="bg-dark-800 border border-dark-700 rounded-2xl p-4 flex-1">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="font-bold text-white text-sm uppercase tracking-wider">⚽ Últimos Resultados</h3>
-              <button onClick={() => setActiveTab('matches')} className="text-xs text-neon-green hover:underline">Ver todos →</button>
-            </div>
-            {finishedMatches.length === 0 ? (
-              <p className="text-center text-gray-500 text-sm py-8">Nenhum jogo encerrado ainda.</p>
-            ) : (
-              <div className="flex flex-col gap-2">
-                {finishedMatches.map(m => <MatchRow key={m.id} match={m} onClick={() => { }} />)}
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Coluna central: Ranking com Pódio */}
-        <div className="lg:col-span-4 bg-dark-800 border border-dark-700 rounded-2xl p-4 flex flex-col">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="font-bold text-white text-sm uppercase tracking-wider">🏆 Ranking Geral</h3>
-            <button onClick={() => setActiveTab('ranking')} className="text-xs text-neon-green hover:underline">Ver completo →</button>
-          </div>
-          {top5.length === 0 ? (
-            <p className="text-center text-gray-500 text-sm py-8">Nenhum palpite ainda.</p>
-          ) : (
-            <div className="flex flex-col gap-4 flex-1">
-              {/* Pódio Visual (Top 3) */}
-              <div className="flex items-end justify-center h-44 gap-2 mb-2">
-                {/* 2º Lugar */}
-                {top5[1] && (
-                  <div className="flex flex-col items-center w-1/3 animate-[slideUp_0.5s_ease-out]">
-                    <span className="text-sm font-bold text-gray-300 truncate w-full text-center px-1">{top5[1].first_name || top5[1].username}</span>
-                    <span className="text-[10px] font-black text-white mb-1">{top5[1].total_points} pts</span>
-                    <div className="flex items-center gap-1 mb-1">
-                        <span className="text-[8px] bg-yellow-400/10 text-yellow-500 px-1.5 py-0.5 rounded border border-yellow-400/20 font-bold" title="Cravadas">🎯 {top5[1].cravadas || 0}</span>
-                        <span className="text-[8px] bg-neon-green/10 text-neon-green px-1.5 py-0.5 rounded border border-neon-green/20 font-bold" title="Acertos">✓ {top5[1].acertos || 0}</span>
-                    </div>
-                    <div className="w-full bg-gradient-to-t from-dark-700 to-dark-600 rounded-t-xl h-20 border-t-2 border-gray-400 flex items-start justify-center pt-2">
-                      <span className="text-2xl">🥈</span>
-                    </div>
-                  </div>
-                )}
-                {/* 1º Lugar */}
-                {top5[0] && (
-                  <div className="flex flex-col items-center w-1/3 z-10 animate-[slideUp_0.7s_ease-out]">
-                    <span className="text-2xl mb-1 animate-bounce">👑</span>
-                    <span className="text-sm font-bold text-yellow-400 truncate w-full text-center px-1">{top5[0].first_name || top5[0].username}</span>
-                    <span className="text-[10px] font-black text-white mb-1">{top5[0].total_points} pts</span>
-                    <div className="flex items-center gap-1 mb-1">
-                        <span className="text-[8px] bg-yellow-400/10 text-yellow-500 px-1.5 py-0.5 rounded border border-yellow-400/20 font-bold" title="Cravadas">🎯 {top5[0].cravadas || 0}</span>
-                        <span className="text-[8px] bg-neon-green/10 text-neon-green px-1.5 py-0.5 rounded border border-neon-green/20 font-bold" title="Acertos">✓ {top5[0].acertos || 0}</span>
-                    </div>
-                    <div className="w-full bg-gradient-to-t from-yellow-500/20 to-yellow-500/40 rounded-t-xl h-28 border-t-2 border-yellow-400 flex items-start justify-center pt-2 shadow-[0_-5px_20px_rgba(250,204,21,0.2)]">
-                      <span className="text-2xl">🥇</span>
-                    </div>
-                  </div>
-                )}
-                {/* 3º Lugar */}
-                {top5[2] && (
-                  <div className="flex flex-col items-center w-1/3 animate-[slideUp_0.6s_ease-out]">
-                    <span className="text-sm font-bold text-orange-400 truncate w-full text-center px-1">{top5[2].first_name || top5[2].username}</span>
-                    <span className="text-[10px] font-black text-white mb-1">{top5[2].total_points} pts</span>
-                    <div className="flex items-center gap-1 mb-1">
-                        <span className="text-[8px] bg-yellow-400/10 text-yellow-500 px-1.5 py-0.5 rounded border border-yellow-400/20 font-bold" title="Cravadas">🎯 {top5[2].cravadas || 0}</span>
-                        <span className="text-[8px] bg-neon-green/10 text-neon-green px-1.5 py-0.5 rounded border border-neon-green/20 font-bold" title="Acertos">✓ {top5[2].acertos || 0}</span>
-                    </div>
-                    <div className="w-full bg-gradient-to-t from-orange-900/40 to-orange-800/40 rounded-t-xl h-16 border-t-2 border-orange-500 flex items-start justify-center pt-2">
-                      <span className="text-2xl">🥉</span>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* 4º e 5º lugares */}
-              <div className="flex flex-col gap-1.5">
-                {top5.slice(3).map((u, i) => (
-                  <div key={u.id} className="flex items-center gap-3 px-3 py-2 rounded-xl bg-dark-900/50 border border-dark-700/50">
-                    <span className="text-[10px] text-gray-500 font-bold w-6">{i + 4}º</span>
-                    <div className="flex-1 flex flex-col">
-                        <span className="text-sm text-gray-300 font-semibold truncate">{u.first_name || u.username}</span>
-                        <div className="flex items-center gap-1.5 mt-0.5">
-                            <span className="text-[9px] bg-yellow-400/10 text-yellow-500 px-1.5 py-0.5 rounded-full border border-yellow-400/20 font-bold">🎯 {u.cravadas || 0}</span>
-                            <span className="text-[9px] bg-neon-green/10 text-neon-green px-1.5 py-0.5 rounded-full border border-neon-green/20 font-bold">✓ {u.acertos || 0}</span>
-                            <span className="text-[10px] ml-1 font-black">
-                                {u.trend === 'UP' && <span className="text-neon-green">↑</span>}
-                                {u.trend === 'DOWN' && <span className="text-red-500">↓</span>}
-                                {(!u.trend || u.trend === 'SAME') && <span className="text-dark-600">-</span>}
-                            </span>
-                        </div>
-                    </div>
-                    <span className="text-xs font-black text-neon-green">{u.total_points} pts</span>
-                  </div>
-                ))}
-              </div>
-
-              {/* CTA para logar */}
-              <div className="mt-auto pt-3 border-t border-dark-700">
-                <button
-                  onClick={() => setShowLoginModal(true)}
-                  className="w-full py-2 rounded-xl border border-neon-green/30 text-neon-green text-xs font-bold hover:bg-neon-green/10 transition-all"
-                >
-                  Entrar e ver sua posição →
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Coluna direita: Grupos + Próximos */}
-        <div className="lg:col-span-4 flex flex-col gap-4">
-
-          {/* Classificação de grupo */}
-          <div className="bg-dark-800 border border-dark-700 rounded-2xl p-4">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="font-bold text-white text-sm uppercase tracking-wider">🗂 Grupos</h3>
-              {groups.length > 0 && (
-                <select value={activeGroup} onChange={e => setSelectedGroup(e.target.value)}
-                  className="bg-dark-900 border border-dark-700 text-gray-300 text-xs rounded-lg px-2 py-1 focus:outline-none focus:border-neon-green">
-                  {groups.map(g => <option key={g} value={g}>Grupo {g}</option>)}
-                </select>
-              )}
-            </div>
-            {groupTable.length === 0 ? (
-              <p className="text-center text-gray-500 text-sm py-6">Nenhum dado ainda.</p>
-            ) : (
-              <>
-                <div className="grid grid-cols-10 text-[9px] font-bold text-gray-500 uppercase tracking-wider px-1 pb-1 border-b border-dark-700 mb-1">
-                  <span className="col-span-1">#</span>
-                  <span className="col-span-3">Equipe</span>
-                  <span className="col-span-1 text-center">J</span>
-                  <span className="col-span-1 text-center">V</span>
-                  <span className="col-span-1 text-center">E</span>
-                  <span className="col-span-1 text-center">D</span>
-                  <span className="col-span-1 text-center">SG</span>
-                  <span className="col-span-1 text-center font-black">P</span>
-                </div>
-                {groupTable.map((t, i) => (
-                  <div key={t.name} className={`grid grid-cols-10 items-center px-1 py-1.5 rounded-lg mb-0.5 ${i < 2 ? 'bg-neon-green/5 border border-neon-green/10' : 'hover:bg-dark-700'}`}>
-                    <span className={`col-span-1 text-xs font-black ${i < 2 ? 'text-neon-green' : 'text-gray-500'}`}>{i + 1}</span>
-                    <div className="col-span-3 flex items-center gap-1">
-                      {t.flag && <img src={t.flag} alt="" className="w-5 h-3.5 object-cover rounded-sm flex-shrink-0" />}
-                      <span className="text-xs text-gray-300 truncate">{t.name}</span>
-                    </div>
-                    <span className="col-span-1 text-center text-xs text-gray-400">{t.J}</span>
-                    <span className="col-span-1 text-center text-xs text-gray-400">{t.V}</span>
-                    <span className="col-span-1 text-center text-xs text-gray-400">{t.E}</span>
-                    <span className="col-span-1 text-center text-xs text-gray-400">{t.D}</span>
-                    <span className={`col-span-1 text-center text-xs ${t.SG > 0 ? 'text-neon-green' : t.SG < 0 ? 'text-red-400' : 'text-gray-400'}`}>{t.SG > 0 ? `+${t.SG}` : t.SG}</span>
-                    <span className="col-span-1 text-center text-xs font-black text-white">{t.PTS}</span>
-                  </div>
-                ))}
-              </>
-            )}
-          </div>
-
-          {/* Próximos jogos */}
-          <div className="bg-dark-800 border border-dark-700 rounded-2xl p-4 flex-1">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="font-bold text-white text-sm uppercase tracking-wider">⏭ Próximos Jogos</h3>
-              <button onClick={() => setActiveTab('matches')} className="text-xs text-neon-green hover:underline">Ver todos →</button>
-            </div>
-            {upcomingMatches.length === 0 ? (
-              <p className="text-center text-gray-500 text-sm py-6">Nenhum jogo agendado.</p>
-            ) : (
-              <div className="flex flex-col gap-2">
-                {upcomingMatches.map(m => <MatchRow key={m.id} match={m} onClick={() => { }} />)}
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ═══════════════════════════════════════════════════════════════════════════════
 // DASHBOARD PESSOAL (logado)
 // ═══════════════════════════════════════════════════════════════════════════════
-function PersonalDashboard({ ranking, matches, userBets, loggedUser, handleOpenModal, setActiveTab, API_URL, accessToken, stats }) {
+function PersonalDashboard({ ranking, matches, userBets, loggedUser, handleOpenModal, setActiveTab, API_URL, accessToken, stats, activeBolao }) {
   const [selectedGroup, setSelectedGroup] = useState('A');
   const [leaderBets, setLeaderBets] = useState([]);
   const [secadorIndex, setSecadorIndex] = useState(0);
@@ -911,7 +571,7 @@ function PersonalDashboard({ ranking, matches, userBets, loggedUser, handleOpenM
                       {leaderB.match ? (
                         <p className="text-2xl font-black text-white">{leaderB.home_score} x {leaderB.away_score}</p>
                       ) : (
-                        <p className="text-xs text-gray-400 mt-2 italic">Ainda não palpitou</p>
+                        <p className="text-[11px] text-blue-400 mt-2 italic font-medium">Líder fazendo mistério... 🤫</p>
                       )}
                     </div>
                   </div>
@@ -1068,54 +728,56 @@ function PersonalDashboard({ ranking, matches, userBets, loggedUser, handleOpenM
           </div>
         )}
 
-        {/* Grupos */}
-        <div className={`${(nextWithoutBetAll.length > 0 && nextWithBetAll.length > 0) ? 'lg:col-span-4' : nextWithoutBetAll.length > 0 || nextWithBetAll.length > 0 ? 'lg:col-span-8' : 'lg:col-span-12'} bg-dark-800 border border-dark-700 rounded-2xl p-4`}>
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="font-bold text-white text-sm uppercase tracking-wider">🗂 Classificação dos Grupos</h3>
-            {groups.length > 0 && (
-              <select value={activeGroup} onChange={e => setSelectedGroup(e.target.value)}
-                className="bg-dark-900 border border-dark-700 text-gray-300 text-xs rounded-lg px-2 py-1 focus:outline-none focus:border-neon-green">
-                {groups.map(g => <option key={g} value={g}>Grupo {g}</option>)}
-              </select>
+        {/* Grupos (Oculto no Mata-Mata) */}
+        {(!activeBolao || activeBolao.scoring_mode !== 'KNOCKOUT') && (
+          <div className={`${(nextWithoutBetAll.length > 0 && nextWithBetAll.length > 0) ? 'lg:col-span-4' : nextWithoutBetAll.length > 0 || nextWithBetAll.length > 0 ? 'lg:col-span-8' : 'lg:col-span-12'} bg-dark-800 border border-dark-700 rounded-2xl p-4`}>
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="font-bold text-white text-sm uppercase tracking-wider">🗂 Classificação dos Grupos</h3>
+              {groups.length > 0 && (
+                <select value={activeGroup} onChange={e => setSelectedGroup(e.target.value)}
+                  className="bg-dark-900 border border-dark-700 text-gray-300 text-xs rounded-lg px-2 py-1 focus:outline-none focus:border-neon-green">
+                  {groups.map(g => <option key={g} value={g}>Grupo {g}</option>)}
+                </select>
+              )}
+            </div>
+            {groupTable.length === 0 ? (
+              <p className="text-center text-gray-500 text-sm py-4">Nenhum dado ainda.</p>
+            ) : (
+              <>
+                <div className="grid grid-cols-10 text-[9px] font-bold text-gray-500 uppercase tracking-wider px-1 pb-1 border-b border-dark-700 mb-1">
+                  <span>#</span><span className="col-span-3">Equipe</span>
+                  <span className="text-center">J</span><span className="text-center">V</span>
+                  <span className="text-center">E</span><span className="text-center">D</span>
+                  <span className="text-center">SG</span><span className="text-center font-black">P</span>
+                </div>
+                {groupTable.map((t, i) => (
+                  <div key={t.name} className={`grid grid-cols-10 items-center px-1 py-1.5 rounded-lg mb-0.5 ${i < 2 ? 'bg-neon-green/5 border border-neon-green/10' : 'hover:bg-dark-700'}`}>
+                    <span className={`text-xs font-black ${i < 2 ? 'text-neon-green' : 'text-gray-500'}`}>{i + 1}</span>
+                    <div className="col-span-3 flex items-center gap-1">
+                      {t.flag && <img src={t.flag} alt="" className="w-5 h-3.5 object-cover rounded-sm flex-shrink-0" />}
+                      <span className="text-xs text-gray-300 truncate">{t.name}</span>
+                    </div>
+                    <span className="text-center text-xs text-gray-400">{t.J}</span>
+                    <span className="text-center text-xs text-gray-400">{t.V}</span>
+                    <span className="text-center text-xs text-gray-400">{t.E}</span>
+                    <span className="text-center text-xs text-gray-400">{t.D}</span>
+                    <span className={`text-center text-xs ${t.SG > 0 ? 'text-neon-green' : t.SG < 0 ? 'text-red-400' : 'text-gray-400'}`}>{t.SG > 0 ? `+${t.SG}` : t.SG}</span>
+                    <span className="text-center text-xs font-black text-white">{t.PTS}</span>
+                  </div>
+                ))}
+              </>
             )}
           </div>
-          {groupTable.length === 0 ? (
-            <p className="text-center text-gray-500 text-sm py-4">Nenhum dado ainda.</p>
-          ) : (
-            <>
-              <div className="grid grid-cols-10 text-[9px] font-bold text-gray-500 uppercase tracking-wider px-1 pb-1 border-b border-dark-700 mb-1">
-                <span>#</span><span className="col-span-3">Equipe</span>
-                <span className="text-center">J</span><span className="text-center">V</span>
-                <span className="text-center">E</span><span className="text-center">D</span>
-                <span className="text-center">SG</span><span className="text-center font-black">P</span>
-              </div>
-              {groupTable.map((t, i) => (
-                <div key={t.name} className={`grid grid-cols-10 items-center px-1 py-1.5 rounded-lg mb-0.5 ${i < 2 ? 'bg-neon-green/5 border border-neon-green/10' : 'hover:bg-dark-700'}`}>
-                  <span className={`text-xs font-black ${i < 2 ? 'text-neon-green' : 'text-gray-500'}`}>{i + 1}</span>
-                  <div className="col-span-3 flex items-center gap-1">
-                    {t.flag && <img src={t.flag} alt="" className="w-5 h-3.5 object-cover rounded-sm flex-shrink-0" />}
-                    <span className="text-xs text-gray-300 truncate">{t.name}</span>
-                  </div>
-                  <span className="text-center text-xs text-gray-400">{t.J}</span>
-                  <span className="text-center text-xs text-gray-400">{t.V}</span>
-                  <span className="text-center text-xs text-gray-400">{t.E}</span>
-                  <span className="text-center text-xs text-gray-400">{t.D}</span>
-                  <span className={`text-center text-xs ${t.SG > 0 ? 'text-neon-green' : t.SG < 0 ? 'text-red-400' : 'text-gray-400'}`}>{t.SG > 0 ? `+${t.SG}` : t.SG}</span>
-                  <span className="text-center text-xs font-black text-white">{t.PTS}</span>
-                </div>
-              ))}
-            </>
-          )}
-        </div>
+        )}
       </div>
     </div>
   );
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// EXPORTAÇÃO PRINCIPAL — escolhe o modo
+// EXPORTAÇÃO PRINCIPAL
 // ═══════════════════════════════════════════════════════════════════════════════
-export function DashboardTab({ ranking, matches, userBets, loggedUser, handleOpenModal, setActiveTab, setShowLoginModal, API_URL, accessToken }) {
+export function DashboardTab({ ranking, matches, userBets, loggedUser, handleOpenModal, setActiveTab, API_URL, accessToken, activeBolao }) {
   const [stats, setStats] = useState(null);
 
   useEffect(() => {
@@ -1126,28 +788,18 @@ export function DashboardTab({ ranking, matches, userBets, loggedUser, handleOpe
       .catch(console.error);
   }, [API_URL]);
 
-  if (loggedUser) {
-    return (
-      <PersonalDashboard
-        ranking={ranking}
-        matches={matches}
-        userBets={userBets}
-        loggedUser={loggedUser}
-        handleOpenModal={handleOpenModal}
-        setActiveTab={setActiveTab}
-        API_URL={API_URL}
-        accessToken={accessToken}
-        stats={stats}
-      />
-    );
-  }
   return (
-    <PublicDashboard
+    <PersonalDashboard
       ranking={ranking}
       matches={matches}
+      userBets={userBets}
+      loggedUser={loggedUser}
+      handleOpenModal={handleOpenModal}
       setActiveTab={setActiveTab}
-      setShowLoginModal={setShowLoginModal}
+      API_URL={API_URL}
+      accessToken={accessToken}
       stats={stats}
+      activeBolao={activeBolao}
     />
   );
 }

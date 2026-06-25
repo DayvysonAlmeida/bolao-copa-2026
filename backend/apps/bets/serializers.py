@@ -4,9 +4,12 @@ from .models import Bet
 
 
 class BetSerializer(serializers.ModelSerializer):
+    # Campo aditivo para exibir o nome do time classificado nos pênaltis
+    penalty_winner_name = serializers.ReadOnlyField(source='penalty_winner.name')
+
     class Meta:
         model = Bet
-        fields = ['id', 'user', 'match', 'home_score', 'away_score', 'points_earned']
+        fields = ['id', 'user', 'match', 'home_score', 'away_score', 'points_earned', 'penalty_winner', 'penalty_winner_name']
         # Segurança máxima: O frontend pode enviar os placares, mas nunca os pontos ganhos.
         # Os pontos serão calculados apenas pelo nosso backend.
         read_only_fields = ['points_earned']

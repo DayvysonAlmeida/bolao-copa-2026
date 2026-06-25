@@ -1,5 +1,43 @@
 from django.db import models
 
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# BOLÃO — Agrupa partidas e participantes em campeonatos independentes
+# ═══════════════════════════════════════════════════════════════════════════════
+class Bolao(models.Model):
+    """Modelo para gerenciar múltiplos bolões independentes.
+    Cada bolão tem seu próprio ranking, partidas e regras de pontuação."""
+    SCORING_CHOICES = (
+        ('STANDARD', 'Padrão (5/3/0)'),
+        ('KNOCKOUT', 'Mata-Mata (8/5/3/0 com pênaltis)'),
+    )
+    STATUS_CHOICES = (
+        ('OPEN', 'Aberto para palpites'),
+        ('LOCKED', 'Trancado (jogos em andamento)'),
+        ('FINISHED', 'Encerrado'),
+    )
+    name = models.CharField(max_length=200, verbose_name="Nome do Bolão")
+    description = models.TextField(blank=True, verbose_name="Descrição")
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='OPEN', verbose_name="Status")
+    scoring_mode = models.CharField(max_length=20, choices=SCORING_CHOICES, default='STANDARD', verbose_name="Modo de Pontuação")
+    is_active = models.BooleanField(default=False, verbose_name="Bolão Ativo", help_text="Qual bolão aparece por padrão no frontend")
+    allow_registration = models.BooleanField(default=True, verbose_name="Permitir Inscrições")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Bolão"
+        verbose_name_plural = "Bolões"
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.name} ({self.get_status_display()})"
+
+    def save(self, *args, **kwargs):
+        # Se está marcando este como ativo, desmarca os outros
+        if self.is_active:
+            Bolao.objects.filter(is_active=True).exclude(pk=self.pk).update(is_active=False)
+        super().save(*args, **kwargs)
+
 class Team(models.Model):
     """Tabela para armazenar as Seleções da Copa"""
     name = models.CharField(max_length=100, unique=True, verbose_name="Nome da Seleção")
@@ -17,6 +55,12 @@ class Match(models.Model):
         ('FINISHED', 'Finalizado'),
     )
     
+    # ── Campos novos (aditivos, null=True para não quebrar dados existentes) ──
+    bolao = models.ForeignKey(Bolao, on_delete=models.SET_NULL, null=True, blank=True, related_name='matches', verbose_name="Bolão")
+    phase = models.CharField(max_length=30, blank=True, default='', verbose_name="Fase", help_text="Ex: GROUP_STAGE, ROUND_16, QUARTER_FINALS...")
+    penalty_winner = models.ForeignKey(Team, on_delete=models.SET_NULL, null=True, blank=True, related_name='penalty_wins', verbose_name="Classificado nos Pênaltis")
+
+    # ── Campos originais (INTOCADOS) ─────────────────────────────────────────
     # Relações com a tabela Team (Time da Casa e Time de Fora)
     home_team = models.ForeignKey(Team, on_delete=models.CASCADE, related_name='home_matches', verbose_name="Time Casa")
     away_team = models.ForeignKey(Team, on_delete=models.CASCADE, related_name='away_matches', verbose_name="Time Fora")
@@ -39,6 +83,9 @@ class Match(models.Model):
         # 2. Se a partida terminou ou está em andamento e tem um placar definido, calcula os pontos (ao vivo)
         if self.status in ['FINISHED', 'IN_PROGRESS'] and self.home_score is not None and self.away_score is not None:
             
+            # Verifica se é um bolão de mata-mata (pontuação especial)
+            is_knockout = self.bolao and self.bolao.scoring_mode == 'KNOCKOUT'
+
             # Pega todos os palpites atrelados a esta partida
             for bet in self.bets.all():
                 pontos = 0
@@ -46,6 +93,10 @@ class Match(models.Model):
                 # Regra 1: Placar Exato (5 pontos)
                 if bet.home_score == self.home_score and bet.away_score == self.away_score:
                     pontos = 5
+                    # ── BÔNUS MATA-MATA: Cravou empate + acertou classificado = 8 pts ──
+                    if is_knockout and self.home_score == self.away_score and self.penalty_winner:
+                        if bet.penalty_winner_id and bet.penalty_winner_id == self.penalty_winner_id:
+                            pontos = 8  # 🏆 CRAVADA SUPREMA
                 else:
                     # Regra 2: Acertar o Resultado (3 pontos)
                     # Descobrindo o resultado real
@@ -67,6 +118,10 @@ class Match(models.Model):
                     # Se acertou a tendência (vencedor ou empate)
                     if resultado_real == resultado_palpite:
                         pontos = 3
+                        # ── BÔNUS MATA-MATA: Acertou empate + classificado = 5 pts ──
+                        if is_knockout and resultado_real == 'EMPATE' and self.penalty_winner:
+                            if bet.penalty_winner_id and bet.penalty_winner_id == self.penalty_winner_id:
+                                pontos = 5
 
                 # Atualiza os pontos do palpite no banco de dados
                 if bet.points_earned != pontos:
