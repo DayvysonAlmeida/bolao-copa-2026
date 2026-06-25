@@ -14,6 +14,37 @@ class BetSerializer(serializers.ModelSerializer):
         # Os pontos serão calculados apenas pelo nosso backend.
         read_only_fields = ['points_earned']
 
+    def validate(self, data):
+        # Em edições parciais, usamos os dados existentes combinados com os novos
+        home_score = data.get('home_score', self.instance.home_score if self.instance else None)
+        away_score = data.get('away_score', self.instance.away_score if self.instance else None)
+        penalty_winner = data.get('penalty_winner', self.instance.penalty_winner if self.instance else None)
+        match = data.get('match', self.instance.match if self.instance else None)
+
+        if not match:
+            raise serializers.ValidationError("Partida não informada.")
+
+        # Validação de Segurança (Tempo e Status)
+        # Admins (staff) podem contornar essa regra
+        request = self.context.get('request')
+        is_staff = request and request.user and request.user.is_staff
+
+        if not is_staff:
+            if match.status != 'PENDING':
+                raise serializers.ValidationError("Apostas encerradas para este jogo.")
+            
+            from django.utils import timezone
+            if timezone.now() >= match.match_date:
+                raise serializers.ValidationError("O jogo já começou! Apostas bloqueadas pelo horário.")
+
+        # Validação de Pênaltis no Mata-Mata
+        if match.bolao and match.bolao.scoring_mode == 'KNOCKOUT':
+            if home_score is not None and away_score is not None and home_score == away_score:
+                if not penalty_winner:
+                    raise serializers.ValidationError("No Mata-Mata, em caso de empate, você deve informar o vencedor dos pênaltis.")
+
+        return data
+
 
 class RankingSerializer(serializers.ModelSerializer):
     # Declaramos um campo virtual que será gerado pela View

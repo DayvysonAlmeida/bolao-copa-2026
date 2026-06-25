@@ -34,12 +34,15 @@ class MatchViewSet(viewsets.ReadOnlyModelViewSet):
             # Coloca no cache imediatamente para que se 10 usuários entrarem juntos, 
             # apenas 1 disparo de sync seja feito
             cache.set('last_football_sync', True, timeout=60)
-            try:
-                # Roda a sincronização de forma silenciosa
-                call_command('sync_worldcup26')
-            except Exception as e:
-                logger.error(f"Erro no auto-sync de jogos: {e}")
-                cache.delete('last_football_sync') # Deleta para tentar de novo logo
+            def run_sync():
+                try:
+                    call_command('sync_worldcup26')
+                except Exception as e:
+                    logger.error(f"Erro no auto-sync de jogos: {e}")
+                    cache.delete('last_football_sync')
+            
+            import threading
+            threading.Thread(target=run_sync).start()
                 
         # Retorna a lista de jogos normalmente para o usuário (a renderização continua)
         return super().list(request, *args, **kwargs)
@@ -204,11 +207,16 @@ class BolaoViewSet(viewsets.ReadOnlyModelViewSet):
         last_sync = cache.get('last_football_sync')
         if not last_sync:
             cache.set('last_football_sync', True, timeout=60)
-            try:
-                call_command('sync_worldcup26')
-            except Exception as e:
-                logger.error(f"Erro no auto-sync de jogos no bolão: {e}")
-                cache.delete('last_football_sync')
+            
+            def run_sync_bolao():
+                try:
+                    call_command('sync_worldcup26')
+                except Exception as e:
+                    logger.error(f"Erro no auto-sync de jogos no bolão: {e}")
+                    cache.delete('last_football_sync')
+            
+            import threading
+            threading.Thread(target=run_sync_bolao).start()
 
         bolao = self.get_object()
         matches = Match.objects.filter(bolao=bolao).select_related(

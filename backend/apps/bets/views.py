@@ -21,12 +21,7 @@ class BetViewSet(viewsets.ModelViewSet):
     
     def perform_create(self, serializer):
         user = self.request.user
-        match = serializer.validated_data.get('match')
         
-        # Bloqueia apostas em jogos que já começaram ou terminaram
-        if match and match.status != 'PENDING' and not user.is_staff:
-            raise ValidationError("Apostas encerradas para este jogo.")
-
         if user.is_staff:
             # O admin pode mandar o usuário no JSON. Se não mandar, usa ele mesmo.
             serializer.save()
@@ -41,10 +36,6 @@ class BetViewSet(viewsets.ModelViewSet):
         # Se for um usuário normal tentando editar o palpite de outra pessoa
         if not user.is_staff and bet.user != user:
             raise ValidationError("Você não tem permissão para alterar este palpite.")
-            
-        # Bloqueia alteração se o jogo já começou
-        if bet.match.status != 'PENDING' and not user.is_staff:
-            raise ValidationError("Apostas encerradas para este jogo.")
             
         serializer.save()
 
