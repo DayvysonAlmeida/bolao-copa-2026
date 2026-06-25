@@ -82,9 +82,6 @@ class Match(models.Model):
 
         # 2. Se a partida terminou ou está em andamento e tem um placar definido, calcula os pontos (ao vivo)
         if self.status in ['FINISHED', 'IN_PROGRESS'] and self.home_score is not None and self.away_score is not None:
-            
-            # Verifica se é um bolão de mata-mata (pontuação especial)
-            is_knockout = self.bolao and self.bolao.scoring_mode == 'KNOCKOUT'
 
             # Pega todos os palpites atrelados a esta partida
             for bet in self.bets.all():
@@ -93,10 +90,6 @@ class Match(models.Model):
                 # Regra 1: Placar Exato (5 pontos)
                 if bet.home_score == self.home_score and bet.away_score == self.away_score:
                     pontos = 5
-                    # ── BÔNUS MATA-MATA: Cravou empate + acertou classificado = 8 pts ──
-                    if is_knockout and self.home_score == self.away_score and self.penalty_winner:
-                        if bet.penalty_winner_id and bet.penalty_winner_id == self.penalty_winner_id:
-                            pontos = 8  # 🏆 CRAVADA SUPREMA
                 else:
                     # Regra 2: Acertar o Resultado (3 pontos)
                     # Descobrindo o resultado real
@@ -118,10 +111,6 @@ class Match(models.Model):
                     # Se acertou a tendência (vencedor ou empate)
                     if resultado_real == resultado_palpite:
                         pontos = 3
-                        # ── BÔNUS MATA-MATA: Acertou empate + classificado = 5 pts ──
-                        if is_knockout and resultado_real == 'EMPATE' and self.penalty_winner:
-                            if bet.penalty_winner_id and bet.penalty_winner_id == self.penalty_winner_id:
-                                pontos = 5
 
                 # Atualiza os pontos do palpite no banco de dados
                 if bet.points_earned != pontos:

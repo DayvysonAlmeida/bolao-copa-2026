@@ -80,10 +80,7 @@ export function useBets(API_URL, accessToken, loggedUser, setShowLoginModal, set
       return;
     }
 
-    if (selectedMatch?.scoring_mode === 'KNOCKOUT' && homeBet === awayBet && !penaltyWinner) {
-      setStatusMessage({ type: 'error', text: 'Em caso de empate no Mata-Mata, é obrigatório escolher o vencedor dos pênaltis.' });
-      return;
-    }
+
 
     const betData = {
       user: loggedUser?.id ?? 1,

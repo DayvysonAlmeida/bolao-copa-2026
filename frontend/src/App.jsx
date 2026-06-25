@@ -217,7 +217,7 @@ function App() {
               </h1>
               <p className="text-sm text-gray-400">
                 {activeBolao && activeBolao.scoring_mode === 'KNOCKOUT' 
-                  ? "Modo Mata-Mata: Acerte o classificado nos pênaltis em empates e ganhe 8 pontos!" 
+                  ? "Modo Mata-Mata: Valem os 90 minutos! Placar exato = 5 pts, Acertar vencedor = 3 pts." 
                   : "Resultados e ranking visíveis para todos. Login apenas no modal para enviar ou alterar palpites."}
               </p>
             </div>

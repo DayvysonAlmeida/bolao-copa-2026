@@ -198,10 +198,11 @@ function PersonalDashboard({ ranking, matches, userBets, loggedUser, handleOpenM
   const isLeader = userRankPos === 0;
 
   // Stats pessoais
-  const totalBets = userBets.length;
-  const exactBets = userBets.filter(b => b.points_earned === 5).length;
-  const winnerBets = userBets.filter(b => b.points_earned === 3).length;
-  const wrongBets = userBets.filter(b => b.points_earned === 0 && matches.find(m => m.id === b.match)?.status === 'FINISHED').length;
+  const activeBolaoBets = userBets.filter(b => matches.some(m => m.id === b.match));
+  const totalBets = activeBolaoBets.length;
+  const exactBets = activeBolaoBets.filter(b => b.points_earned === 5).length;
+  const winnerBets = activeBolaoBets.filter(b => b.points_earned === 3).length;
+  const wrongBets = activeBolaoBets.filter(b => b.points_earned === 0 && matches.find(m => m.id === b.match)?.status === 'FINISHED').length;
   const hitRate = totalBets > 0 ? Math.round(((exactBets + winnerBets) / totalBets) * 100) : 0;
   const myPoints = userRankData?.total_points ?? 0;
 
@@ -214,7 +215,7 @@ function PersonalDashboard({ ranking, matches, userBets, loggedUser, handleOpenM
   ];
 
   // Gamificação: Streak (Badges)
-  const myFinishedBets = userBets
+  const myFinishedBets = activeBolaoBets
     .filter(b => matches.find(m => m.id === b.match)?.status === 'FINISHED')
     .sort((a, b) => new Date(matches.find(m => m.id === a.match).match_date) - new Date(matches.find(m => m.id === b.match).match_date));
 
@@ -251,7 +252,7 @@ function PersonalDashboard({ ranking, matches, userBets, loggedUser, handleOpenM
   const liveMatches = matches.filter(m => m.status === 'IN_PROGRESS');
 
   // Últimos meus resultados
-  const myLastResults = userBets
+  const myLastResults = activeBolaoBets
     .filter(b => matches.find(m => m.id === b.match)?.status === 'FINISHED')
     .sort((a, b) => new Date(matches.find(m => m.id === b.match).match_date) - new Date(matches.find(m => m.id === a.match).match_date))
     .slice(0, 4)
@@ -781,12 +782,12 @@ export function DashboardTab({ ranking, matches, userBets, loggedUser, handleOpe
   const [stats, setStats] = useState(null);
 
   useEffect(() => {
-    if (!API_URL) return;
-    fetch(`${API_URL}/stats/`)
+    if (!API_URL || !activeBolao) return;
+    fetch(`${API_URL}/bolaos/${activeBolao.id}/stats/`)
       .then(res => res.json())
       .then(data => setStats(data))
       .catch(console.error);
-  }, [API_URL]);
+  }, [API_URL, activeBolao]);
 
   return (
     <PersonalDashboard

@@ -50,12 +50,9 @@ export function BolaoJoinCard({ bolao, accessToken, API_URL, onJoinSuccess }) {
                 <span className="flex-shrink-0 mt-0.5 text-lg">✓</span>
                 <span><strong>3 Pontos:</strong> Acertar o vencedor da partida nos 90 minutos.</span>
               </li>
-              <li className="flex gap-3 bg-neon-green/10 border border-neon-green/20 p-3 rounded-xl mt-4">
-                <span className="flex-shrink-0 mt-0.5 text-lg">🏆</span>
-                <div>
-                  <span className="text-neon-green font-bold block mb-1">NOVIDADE: Pênaltis! (8 Pontos)</span>
-                  <span>Ao palpitar empate, você escolhe quem passa nos pênaltis. Se cravar o empate E acertar o classificado: <strong>8 pontos!</strong></span>
-                </div>
+              <li className="flex gap-3 mt-4 pt-4 border-t border-dark-700">
+                <span className="flex-shrink-0 mt-0.5 text-lg">⚖️</span>
+                <span><strong>Desempate:</strong> 1º Mais cravadas, 2º Mais acertos de vencedor, 3º Data de inscrição.</span>
               </li>
             </ul>
           </div>
