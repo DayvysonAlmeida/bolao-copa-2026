@@ -266,9 +266,13 @@ class Command(BaseCommand):
 
         # ── 4. Resumo ─────────────────────────────────────────────────────────
         if not dry_run:
+            from apps.bets.utils import update_ranking_positions
+            self.stdout.write(self.style.HTTP_INFO("[INFO] Atualizando histórico de posições do ranking de cada Bolão..."))
+            update_ranking_positions()
+
             self.stdout.write("")
             self.stdout.write(self.style.SUCCESS("═" * 52))
-            self.stdout.write(self.style.SUCCESS("✅ Sincronização concluída!"))
+            self.stdout.write(self.style.SUCCESS("✅ Sincronização e Ranking concluídos!"))
             self.stdout.write(f"   Times criados:     {times_criados}")
             self.stdout.write(f"   Times atualizados: {times_atualizados}")
             self.stdout.write(f"   Jogos criados:     {jogos_criados}")
