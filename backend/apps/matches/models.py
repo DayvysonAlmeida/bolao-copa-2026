@@ -58,6 +58,7 @@ class Match(models.Model):
     # ── Campos novos (aditivos, null=True para não quebrar dados existentes) ──
     bolao = models.ForeignKey(Bolao, on_delete=models.SET_NULL, null=True, blank=True, related_name='matches', verbose_name="Bolão")
     phase = models.CharField(max_length=30, blank=True, default='', verbose_name="Fase", help_text="Ex: GROUP_STAGE, ROUND_16, QUARTER_FINALS...")
+    match_number = models.IntegerField(null=True, blank=True, verbose_name="Número do Jogo (FIFA)", help_text="Ex: 73, 74, 75...")
     penalty_winner = models.ForeignKey(Team, on_delete=models.SET_NULL, null=True, blank=True, related_name='penalty_wins', verbose_name="Classificado nos Pênaltis")
 
     # ── Campos originais (INTOCADOS) ─────────────────────────────────────────

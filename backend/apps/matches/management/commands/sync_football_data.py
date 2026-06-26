@@ -16,6 +16,7 @@ import os
 import requests
 from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
+from django.utils.dateparse import parse_datetime
 from apps.matches.models import Team, Match
 
 # Dicionário de Tradução: Inglês da API -> Português (Padrão IBGE/Fifa pt-br)
@@ -63,6 +64,7 @@ STATUS_MAP = {
 # NOVO: Mapeamento de fases da API para nosso campo phase
 STAGE_MAP = {
     "GROUP_STAGE": "GROUP_STAGE",
+    "LAST_32": "ROUND_32",
     "LAST_16": "ROUND_16",
     "QUARTER_FINALS": "QUARTER_FINALS",
     "SEMI_FINALS": "SEMI_FINALS",
@@ -131,14 +133,26 @@ class Command(BaseCommand):
             pen_away = penalties.get("away") if penalties else None
             
             # Pega a data/hora oficial da API
-            from django.utils.dateparse import parse_datetime
             utc_date_str = m.get("utcDate")
             api_match_date = parse_datetime(utc_date_str) if utc_date_str else None
 
-            match_qs = Match.objects.filter(home_team__name=home_ptbr, away_team__name=away_ptbr)
+            is_knockout = phase in ["ROUND_32", "ROUND_16", "QUARTER_FINALS", "SEMI_FINALS", "THIRD_PLACE", "FINAL"]
+
+            if is_knockout and api_match_date:
+                match_qs = Match.objects.filter(bolao__scoring_mode='KNOCKOUT', match_date=api_match_date)
+            else:
+                match_qs = Match.objects.filter(home_team__name=home_ptbr, away_team__name=away_ptbr)
             
             if match_qs.exists():
                 match_obj = match_qs.first()
+                
+                # Se for Mata-Mata, atualiza os times para substituir os placeholders (ex: "W74") pelos times reais da API
+                if is_knockout:
+                    team_home, _ = Team.objects.get_or_create(name=home_ptbr, defaults={'group': '-'})
+                    team_away, _ = Team.objects.get_or_create(name=away_ptbr, defaults={'group': '-'})
+                    match_obj.home_team = team_home
+                    match_obj.away_team = team_away
+
                 
                 if match_obj.status != 'FINISHED' and status == 'FINISHED':
                     teve_jogo_finalizado_agora = True
