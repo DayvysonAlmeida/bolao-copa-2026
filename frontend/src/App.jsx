@@ -201,7 +201,7 @@ function App() {
   if (isLoggedIn && !activeBolao) {
     return (
       <div className="min-h-screen bg-dark-900 text-gray-100 p-4 sm:p-6 md:p-4 sm:p-6 md:p-8 pb-20 relative">
-        <header className="mb-8 flex justify-between items-center bg-dark-800/60 backdrop-blur-xl border border-dark-700/50 p-4 rounded-3xl sticky top-4 z-40 shadow-2xl">
+        <header className="mb-8 flex justify-between items-center bg-dark-800/60 backdrop-blur-xl border border-dark-700/50 p-4 rounded-3xl relative md:sticky md:top-4 z-40 shadow-2xl">
           <div className="flex items-center gap-3 pl-2">
             <span className="text-3xl">⚽</span>
             <span className="text-xl font-black text-white tracking-tight hidden sm:block">Bolão <span className="text-neon-green">Copa - 2026</span></span>
@@ -244,7 +244,7 @@ function App() {
 
   return (
     <div className="min-h-screen bg-dark-900 text-gray-100 p-4 sm:p-6 md:p-4 sm:p-6 md:p-8 pb-20 relative">
-      <header className="mb-8 bg-dark-800/60 backdrop-blur-xl border border-dark-700/50 p-5 sm:p-6 rounded-3xl sticky top-4 z-40 shadow-2xl">
+      <header className="mb-8 bg-dark-800/60 backdrop-blur-xl border border-dark-700/50 p-5 sm:p-6 rounded-3xl relative md:sticky md:top-4 z-40 shadow-2xl">
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
           <div className="flex flex-col md:flex-row md:items-center gap-4 md:gap-6">
             <button
@@ -258,7 +258,13 @@ function App() {
               <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-white mb-1 tracking-tight flex items-center gap-3">
                 {activeBolao ? activeBolao.name : "Bolão Copa 2026"}
                 {activeBolao && activeBolao.status === 'LOCKED' && (
-                  <span className="bg-neon-green text-dark-900 text-[10px] uppercase font-black px-2 py-0.5 rounded-md shadow-[0_0_10px_rgba(4,211,97,0.3)]">Ao Vivo</span>
+                  <span className="bg-neon-green text-dark-900 text-[10px] uppercase font-black px-2 py-0.5 rounded-md shadow-[0_0_10px_rgba(4,211,97,0.3)]">Em Andamento</span>
+                )}
+                {activeBolao && activeBolao.status === 'FINISHED' && (
+                  <span className="bg-gray-600 text-white text-[10px] uppercase font-black px-2 py-0.5 rounded-md shadow-[0_0_10px_rgba(75,85,99,0.3)]">Finalizado</span>
+                )}
+                {activeBolao && activeBolao.status === 'OPEN' && (
+                  <span className="bg-blue-500 text-white text-[10px] uppercase font-black px-2 py-0.5 rounded-md shadow-[0_0_10px_rgba(59,130,246,0.3)]">Em Breve</span>
                 )}
               </h1>
               <p className="text-xs sm:text-sm text-gray-400 max-w-2xl leading-relaxed">
