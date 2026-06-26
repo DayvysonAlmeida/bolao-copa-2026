@@ -1,5 +1,43 @@
 from django.db import models
 
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# BOLÃO — Agrupa partidas e participantes em campeonatos independentes
+# ═══════════════════════════════════════════════════════════════════════════════
+class Bolao(models.Model):
+    """Modelo para gerenciar múltiplos bolões independentes.
+    Cada bolão tem seu próprio ranking, partidas e regras de pontuação."""
+    SCORING_CHOICES = (
+        ('STANDARD', 'Padrão (5/3/0)'),
+        ('KNOCKOUT', 'Mata-Mata (8/5/3/0 com pênaltis)'),
+    )
+    STATUS_CHOICES = (
+        ('OPEN', 'Aberto para palpites'),
+        ('LOCKED', 'Trancado (jogos em andamento)'),
+        ('FINISHED', 'Encerrado'),
+    )
+    name = models.CharField(max_length=200, verbose_name="Nome do Bolão")
+    description = models.TextField(blank=True, verbose_name="Descrição")
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='OPEN', verbose_name="Status")
+    scoring_mode = models.CharField(max_length=20, choices=SCORING_CHOICES, default='STANDARD', verbose_name="Modo de Pontuação")
+    is_active = models.BooleanField(default=False, verbose_name="Bolão Ativo", help_text="Qual bolão aparece por padrão no frontend")
+    allow_registration = models.BooleanField(default=True, verbose_name="Permitir Inscrições")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Bolão"
+        verbose_name_plural = "Bolões"
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.name} ({self.get_status_display()})"
+
+    def save(self, *args, **kwargs):
+        # Se está marcando este como ativo, desmarca os outros
+        if self.is_active:
+            Bolao.objects.filter(is_active=True).exclude(pk=self.pk).update(is_active=False)
+        super().save(*args, **kwargs)
+
 class Team(models.Model):
     """Tabela para armazenar as Seleções da Copa"""
     name = models.CharField(max_length=100, unique=True, verbose_name="Nome da Seleção")
@@ -17,6 +55,12 @@ class Match(models.Model):
         ('FINISHED', 'Finalizado'),
     )
     
+    # ── Campos novos (aditivos, null=True para não quebrar dados existentes) ──
+    bolao = models.ForeignKey(Bolao, on_delete=models.SET_NULL, null=True, blank=True, related_name='matches', verbose_name="Bolão")
+    phase = models.CharField(max_length=30, blank=True, default='', verbose_name="Fase", help_text="Ex: GROUP_STAGE, ROUND_16, QUARTER_FINALS...")
+    penalty_winner = models.ForeignKey(Team, on_delete=models.SET_NULL, null=True, blank=True, related_name='penalty_wins', verbose_name="Classificado nos Pênaltis")
+
+    # ── Campos originais (INTOCADOS) ─────────────────────────────────────────
     # Relações com a tabela Team (Time da Casa e Time de Fora)
     home_team = models.ForeignKey(Team, on_delete=models.CASCADE, related_name='home_matches', verbose_name="Time Casa")
     away_team = models.ForeignKey(Team, on_delete=models.CASCADE, related_name='away_matches', verbose_name="Time Fora")
@@ -38,7 +82,7 @@ class Match(models.Model):
 
         # 2. Se a partida terminou ou está em andamento e tem um placar definido, calcula os pontos (ao vivo)
         if self.status in ['FINISHED', 'IN_PROGRESS'] and self.home_score is not None and self.away_score is not None:
-            
+
             # Pega todos os palpites atrelados a esta partida
             for bet in self.bets.all():
                 pontos = 0
@@ -78,3 +122,38 @@ class Match(models.Model):
                 if bet.points_earned != 0:
                     bet.points_earned = 0
                     bet.save()
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# RESENHA — Chat/Comentários por Partida
+# ═══════════════════════════════════════════════════════════════════════════════
+from django.contrib.auth.models import User
+
+class MatchComment(models.Model):
+    """Comentários dos usuários na resenha de cada jogo"""
+    match = models.ForeignKey(Match, on_delete=models.CASCADE, related_name='comments', verbose_name="Partida")
+    user = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name="Usuário")
+    text = models.TextField(verbose_name="Comentário")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Enviado em")
+
+    class Meta:
+        verbose_name = "Resenha"
+        verbose_name_plural = "Resenhas"
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.user.username} sobre {self.match}"
+
+class BolaoComment(models.Model):
+    """Comentários globais do bolão"""
+    bolao = models.ForeignKey(Bolao, on_delete=models.CASCADE, related_name='comments', verbose_name="Bolão")
+    user = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name="Usuário")
+    text = models.TextField(verbose_name="Comentário")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Enviado em")
+
+    class Meta:
+        verbose_name = "Resenha do Bolão"
+        verbose_name_plural = "Resenhas dos Bolões"
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.user.username} no bolão {self.bolao}"

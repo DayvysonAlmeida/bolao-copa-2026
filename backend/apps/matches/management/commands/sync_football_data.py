@@ -60,6 +60,16 @@ STATUS_MAP = {
     "AWARDED": "FINISHED"
 }
 
+# NOVO: Mapeamento de fases da API para nosso campo phase
+STAGE_MAP = {
+    "GROUP_STAGE": "GROUP_STAGE",
+    "LAST_16": "ROUND_16",
+    "QUARTER_FINALS": "QUARTER_FINALS",
+    "SEMI_FINALS": "SEMI_FINALS",
+    "THIRD_PLACE": "THIRD_PLACE",
+    "FINAL": "FINAL",
+}
+
 class Command(BaseCommand):
     help = "Sincroniza jogos via football-data.org atualizando apenas placares."
 
@@ -106,10 +116,19 @@ class Command(BaseCommand):
             api_status = m.get("status", "SCHEDULED")
             status = STATUS_MAP.get(api_status, "PENDING")
 
+            # NOVO: Extrair fase do jogo da API
+            api_stage = m.get("stage", "GROUP_STAGE")
+            phase = STAGE_MAP.get(api_stage, api_stage)
+
             score = m.get("score", {})
             full_time = score.get("fullTime", {})
             home_score = full_time.get("home") if full_time else None
             away_score = full_time.get("away") if full_time else None
+
+            # NOVO: Extrair vencedor dos pênaltis (se aplicável)
+            penalties = score.get("penalties", {})
+            pen_home = penalties.get("home") if penalties else None
+            pen_away = penalties.get("away") if penalties else None
             
             # Pega a data/hora oficial da API
             from django.utils.dateparse import parse_datetime
@@ -130,6 +149,20 @@ class Command(BaseCommand):
                         match_obj.away_score = away_score
                 
                 match_obj.status = status
+
+                # NOVO: Atualizar phase (aditivo)
+                if phase:
+                    match_obj.phase = phase
+
+                # NOVO: Atualizar penalty_winner se houve pênaltis
+                if pen_home is not None and pen_away is not None and pen_home != pen_away:
+                    try:
+                        if pen_home > pen_away:
+                            match_obj.penalty_winner = match_obj.home_team
+                        else:
+                            match_obj.penalty_winner = match_obj.away_team
+                    except Exception:
+                        pass  # Não quebra o sync se der erro
                 
                 horario_atualizado = False
                 if api_match_date and match_obj.match_date != api_match_date:
@@ -141,6 +174,10 @@ class Command(BaseCommand):
                 jogos_atualizados += 1
                 
                 msg = f"  [ATUALIZADO] Atualizado: {home_ptbr} x {away_ptbr} -> Status: {status} Placar: {home_score}x{away_score}"
+                if phase != 'GROUP_STAGE':
+                    msg += f" | Fase: {phase}"
+                if match_obj.penalty_winner:
+                    msg += f" | Pênaltis: {match_obj.penalty_winner.name}"
                 if horario_atualizado:
                     msg += f" | [TEMPO] Horário ajustado!"
                 

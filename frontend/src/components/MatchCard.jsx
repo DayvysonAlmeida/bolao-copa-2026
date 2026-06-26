@@ -58,10 +58,17 @@ export function MatchCard({ match, userBet, loggedUser, handleOpenModal, betChan
           <img src={match.flag_home} alt={match.home_team_name} className="w-12 h-8 rounded-sm shadow-md mb-2 object-cover" />
           <span className="text-sm font-semibold text-center truncate w-full text-gray-300">{match.home_team_name}</span>
         </div>
-        <div className="text-3xl font-black text-white w-1/3 text-center flex justify-center items-center gap-3">
-          <span>{match.home_score !== null ? match.home_score : '-'}</span>
-          <span className="text-gray-600 text-lg font-normal">x</span>
-          <span>{match.away_score !== null ? match.away_score : '-'}</span>
+        <div className="text-3xl font-black text-white w-1/3 text-center flex flex-col justify-center items-center">
+          <div className="flex justify-center items-center gap-3">
+            <span>{match.home_score !== null ? match.home_score : '-'}</span>
+            <span className="text-gray-600 text-lg font-normal">x</span>
+            <span>{match.away_score !== null ? match.away_score : '-'}</span>
+          </div>
+          {match.penalty_winner_name && (
+            <div className="text-[9px] text-yellow-400 mt-1 uppercase tracking-wider font-bold bg-yellow-400/10 px-2 py-0.5 rounded border border-yellow-400/20">
+              Pênaltis: {match.penalty_winner_name}
+            </div>
+          )}
         </div>
         <div className="flex flex-col items-center w-1/3">
           <img src={match.flag_away} alt={match.away_team_name} className="w-12 h-8 rounded-sm shadow-md mb-2 object-cover" />
@@ -70,8 +77,13 @@ export function MatchCard({ match, userBet, loggedUser, handleOpenModal, betChan
       </div>
       {loggedUser && userBet && (
         <div className="mt-4 px-4 py-3 rounded-2xl bg-dark-900 border border-dark-700 text-sm text-gray-300">
-          <div>
-            <span className="font-semibold text-neon-green">Seu palpite:</span> {userBet.home_score} x {userBet.away_score}
+          <div className="flex flex-col gap-1">
+            <div><span className="font-semibold text-neon-green">Seu palpite:</span> {userBet.home_score} x {userBet.away_score}</div>
+            {userBet.penalty_winner_name && (
+              <div className="text-[11px] text-yellow-400">
+                <span className="font-semibold">Classifica:</span> {userBet.penalty_winner_name}
+              </div>
+            )}
           </div>
           <div className="mt-2 text-[10px] text-gray-500">Prazo para edição: {betChangeDeadlineLabel}</div>
         </div>

@@ -23,7 +23,7 @@ from datetime import datetime, timezone
 from zoneinfo import ZoneInfo
 
 from django.core.management.base import BaseCommand, CommandError
-from apps.matches.models import Team, Match
+from apps.matches.models import Team, Match, Bolao
 
 # Fuso horário de Brasília para converter os horários locais da API
 TIMEZONE_BRASILIA = ZoneInfo("America/Sao_Paulo")
@@ -41,7 +41,7 @@ STATUS_MAP = {
 
 # Fases eliminatórias mapeadas para label amigável (grupo = código da fase)
 PHASE_LABELS = {
-    "R32": "Oitavas de Final",
+    "R32": "16-avos de Final",
     "R16": "Oitavas de Final",
     "QF":  "Quartas de Final",
     "SF":  "Semifinal",
@@ -102,6 +102,10 @@ class Command(BaseCommand):
         self.stdout.write(self.style.HTTP_INFO(
             "\n🌍 Sincronizando Copa do Mundo 2026 via worldcup26.ir...\n"
         ))
+
+        # ── Prepara os Bolões alvo ───────────────────────────────────────────
+        bolao_grupos = Bolao.objects.filter(scoring_mode='STANDARD').first()
+        bolao_matamata = Bolao.objects.filter(scoring_mode='KNOCKOUT').first()
         if dry_run:
             self.stdout.write(self.style.WARNING("⚠️  DRY-RUN: nenhum dado será salvo.\n"))
 
@@ -229,6 +233,9 @@ class Command(BaseCommand):
             times_atualizados += not created
 
             # ── Cria/atualiza partida ─────────────────────────────────────────
+            is_knockout = grupo_raw in ["R32", "R16", "QF", "SF", "3RD", "FINAL"]
+            target_bolao = bolao_matamata if is_knockout else bolao_grupos
+
             match, created = Match.objects.update_or_create(
                 home_team=team_home,
                 away_team=team_away,
@@ -237,6 +244,8 @@ class Command(BaseCommand):
                     "home_score": home_score,
                     "away_score": away_score,
                     "status": status,
+                    "bolao": target_bolao,
+                    "phase": grupo_raw,
                 },
             )
             # Aciona cálculo de pontos do bolão
@@ -257,9 +266,13 @@ class Command(BaseCommand):
 
         # ── 4. Resumo ─────────────────────────────────────────────────────────
         if not dry_run:
+            from apps.bets.utils import update_ranking_positions
+            self.stdout.write(self.style.HTTP_INFO("[INFO] Atualizando histórico de posições do ranking de cada Bolão..."))
+            update_ranking_positions()
+
             self.stdout.write("")
             self.stdout.write(self.style.SUCCESS("═" * 52))
-            self.stdout.write(self.style.SUCCESS("✅ Sincronização concluída!"))
+            self.stdout.write(self.style.SUCCESS("✅ Sincronização e Ranking concluídos!"))
             self.stdout.write(f"   Times criados:     {times_criados}")
             self.stdout.write(f"   Times atualizados: {times_atualizados}")
             self.stdout.write(f"   Jogos criados:     {jogos_criados}")

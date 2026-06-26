@@ -7,6 +7,7 @@ export function AdminPanelTab({ matches, users, API_URL, accessToken, onSuccess 
   const [awayScore, setAwayScore] = useState('');
   const [message, setMessage] = useState({ text: '', type: '' });
   const [isLoading, setIsLoading] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
 
   // Garante que users e matches sejam arrays antes de fazer o spread
   const safeUsers = Array.isArray(users) ? users : [];
@@ -120,6 +121,31 @@ export function AdminPanelTab({ matches, users, API_URL, accessToken, onSuccess 
     }
   };
 
+  const handleSyncAPI = async () => {
+    setIsSyncing(true);
+    setMessage({ text: '', type: '' });
+    try {
+      const response = await fetch(`${API_URL}/matches/sync_api/`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`
+        }
+      });
+      const data = await response.json();
+      if (response.ok) {
+        setMessage({ text: data.message || 'Sincronização concluída com sucesso!', type: 'success' });
+        if (onSuccess) onSuccess(); // Recarrega os jogos
+      } else {
+        setMessage({ text: data.error || 'Erro ao sincronizar.', type: 'error' });
+      }
+    } catch (err) {
+      console.error(err);
+      setMessage({ text: 'Erro de conexão na sincronização.', type: 'error' });
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
   return (
     <div className="max-w-3xl mx-auto">
       <div className="bg-dark-800 border border-yellow-500/30 rounded-3xl p-6 md:p-10 shadow-[0_0_30px_rgba(250,204,21,0.05)] relative overflow-hidden">
@@ -134,6 +160,25 @@ export function AdminPanelTab({ matches, users, API_URL, accessToken, onSuccess 
           <div>
             <h2 className="text-2xl font-bold text-white">Área do Juiz</h2>
             <p className="text-gray-400 text-sm">Lance palpites em nome de outros usuários</p>
+          </div>
+          
+          {/* Botão de Sincronização da API */}
+          <div className="ml-auto">
+            <button 
+              onClick={handleSyncAPI}
+              disabled={isSyncing}
+              className="bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 px-4 rounded-xl transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+            >
+              {isSyncing ? (
+                <>
+                  <span className="animate-spin text-xl">⏳</span> Sincronizando...
+                </>
+              ) : (
+                <>
+                  <span className="text-xl">🔄</span> Sincronizar API
+                </>
+              )}
+            </button>
           </div>
         </div>
 

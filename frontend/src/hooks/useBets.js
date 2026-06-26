@@ -6,11 +6,11 @@ export function useBets(API_URL, accessToken, loggedUser, setShowLoginModal, set
   const [selectedMatch, setSelectedMatch] = useState(null);
   const [homeBet, setHomeBet] = useState('');
   const [awayBet, setHomeBetAway] = useState('');
+  const [penaltyWinner, setPenaltyWinner] = useState('');
   const [statusMessage, setStatusMessage] = useState({ type: '', text: '' });
 
-  const betChangeDeadline = new Date('2026-06-10T23:59:59');
-  const isBeforeBetChangeDeadline = new Date() <= betChangeDeadline;
-  const betChangeDeadlineLabel = '10/06/2026';
+  const isBeforeBetChangeDeadline = selectedMatch ? new Date() <= new Date(selectedMatch.match_date) : false;
+  const betChangeDeadlineLabel = 'o início da partida';
 
   const fetchUserBets = async (token) => {
     try {
@@ -68,6 +68,7 @@ export function useBets(API_URL, accessToken, loggedUser, setShowLoginModal, set
     setSelectedMatch(match);
     setHomeBet(existingBet ? existingBet.home_score.toString() : '');
     setHomeBetAway(existingBet ? existingBet.away_score.toString() : '');
+    setPenaltyWinner(existingBet && existingBet.penalty_winner ? existingBet.penalty_winner.toString() : '');
     setEditingBetId(existingBet ? existingBet.id : null);
     setStatusMessage({ type: '', text: '' });
   };
@@ -79,11 +80,15 @@ export function useBets(API_URL, accessToken, loggedUser, setShowLoginModal, set
       return;
     }
 
+
+
     const betData = {
       user: loggedUser?.id ?? 1,
       match: selectedMatch.id,
       home_score: parseInt(homeBet),
-      away_score: parseInt(awayBet)
+      away_score: parseInt(awayBet),
+      // Adiciona penalty_winner apenas se for preenchido (mata-mata em empate)
+      ...(penaltyWinner ? { penalty_winner: parseInt(penaltyWinner) } : { penalty_winner: null })
     };
 
     const headers = {
@@ -133,6 +138,7 @@ export function useBets(API_URL, accessToken, loggedUser, setShowLoginModal, set
     selectedMatch, setSelectedMatch,
     homeBet, setHomeBet,
     awayBet, setHomeBetAway,
+    penaltyWinner, setPenaltyWinner,
     statusMessage, setStatusMessage,
     betChangeDeadlineLabel,
     isBeforeBetChangeDeadline,

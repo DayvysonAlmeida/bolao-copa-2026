@@ -10,3 +10,6 @@ python manage.py collectstatic --no-input
 
 echo "Executando setup do banco de dados (Migrações, Dados e Admin)..."
 python manage.py setup_deploy
+
+echo "Configurando o Bolão da Copa (Mata-Mata)..."
+python manage.py setup_bolao_matamata

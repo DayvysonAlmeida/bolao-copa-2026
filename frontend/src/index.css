@@ -7,3 +7,30 @@
     @apply bg-dark-900 text-gray-100 antialiased;
   }
 }
+
+/* ===== Animações Extras ===== */
+@keyframes pulse-slow {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: .9; transform: scale(0.98); }
+}
+.animate-pulse-slow {
+  animation: pulse-slow 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Bracket Container Styles */
+.bracket-container {
+  scrollbar-width: thin;
+  scrollbar-color: #04D361 transparent;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+}
+.bracket-container::-webkit-scrollbar {
+  height: 8px;
+}
+.bracket-container::-webkit-scrollbar-thumb {
+  background: #04D361;
+  border-radius: 4px;
+}
+.bracket-container::-webkit-scrollbar-track {
+  background: rgba(0,0,0,0.2);
+}
