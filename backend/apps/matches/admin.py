@@ -1,5 +1,23 @@
 from django.contrib import admin
+from django.utils.translation import gettext_lazy as _
 from .models import Team, Match, Bolao
+
+class HasBetsFilter(admin.SimpleListFilter):
+    title = _('tem palpites?')
+    parameter_name = 'has_bets'
+
+    def lookups(self, request, model_admin):
+        return (
+            ('yes', _('Sim (Com palpites)')),
+            ('no',  _('Não (Sem palpites)')),
+        )
+
+    def queryset(self, request, queryset):
+        if self.value() == 'yes':
+            return queryset.filter(bets__isnull=False).distinct()
+        if self.value() == 'no':
+            return queryset.filter(bets__isnull=True)
+        return queryset
 
 
 @admin.register(Bolao)
@@ -18,7 +36,7 @@ class TeamAdmin(admin.ModelAdmin):
 @admin.register(Match)
 class MatchAdmin(admin.ModelAdmin):
     list_display = ('home_team', 'away_team', 'bolao', 'match_date', 'status')
-    list_filter = ('bolao', 'status', 'match_date')
+    list_filter = ('bolao', 'status', HasBetsFilter, 'match_date')
     search_fields = ('home_team__name', 'away_team__name')
     actions = ['recalculate_points_action']
 
