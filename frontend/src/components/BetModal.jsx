@@ -1,3 +1,5 @@
+import { useState, useEffect } from 'react';
+
 export function BetModal({ 
   selectedMatch, 
   setSelectedMatch, 
@@ -14,8 +16,47 @@ export function BetModal({
   statusMessage,
   activeBolao
 }) {
+  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
+  const [comments, setComments] = useState([]);
+  const [newComment, setNewComment] = useState("");
+  const [loadingComments, setLoadingComments] = useState(false);
 
+  useEffect(() => {
+    if (selectedMatch && selectedMatch.id) {
+      setLoadingComments(true);
+      fetch(`${API_URL}/comments/?match=${selectedMatch.id}`)
+        .then(res => res.json())
+        .then(data => {
+          setComments(Array.isArray(data) ? data : data.results || []);
+          setLoadingComments(false);
+        })
+        .catch(err => {
+          console.error("Erro ao carregar comentários", err);
+          setLoadingComments(false);
+        });
+    }
+  }, [selectedMatch, API_URL]);
 
+  const handlePostComment = (e) => {
+    e.preventDefault();
+    if (!newComment.trim()) return;
+    
+    const token = localStorage.getItem('token');
+    fetch(`${API_URL}/comments/`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({ match: selectedMatch.id, text: newComment })
+    })
+    .then(res => res.json())
+    .then(data => {
+      setComments([data, ...comments]);
+      setNewComment("");
+    })
+    .catch(err => console.error("Erro ao postar comentário", err));
+  };
   return (
     <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fadeIn">
       <div className="bg-dark-800 border border-dark-700 w-full max-w-md rounded-2xl p-6 shadow-2xl relative">
@@ -72,6 +113,63 @@ export function BetModal({
             </button>
           </div>
         </form>
+
+        {/* RESENHA SECTION */}
+        <div className="mt-8 border-t border-dark-700 pt-6">
+          <h3 className="text-neon-green font-bold text-sm mb-4 uppercase tracking-widest flex items-center gap-2">
+            💬 Resenha do Jogo
+          </h3>
+          <div className="bg-dark-900 border border-dark-700 rounded-xl p-4 h-48 overflow-y-auto mb-4 flex flex-col gap-3">
+            {loadingComments ? (
+              <div className="text-gray-500 text-xs text-center my-auto">Carregando resenha...</div>
+            ) : comments.length === 0 ? (
+              <div className="text-gray-500 text-xs text-center my-auto">Nenhum comentário ainda. Seja o primeiro a zoar!</div>
+            ) : (
+              comments.map(c => {
+                const getDisplayName = (c) => {
+                  if (c.first_name) return `${c.first_name} ${c.last_name || ''}`.trim();
+                  return c.username;
+                };
+                const getUserColor = (userId) => {
+                  const colors = [
+                    'text-blue-400', 'text-pink-400', 'text-yellow-400', 
+                    'text-purple-400', 'text-orange-400', 'text-cyan-400', 
+                    'text-teal-400', 'text-rose-400'
+                  ];
+                  if (!userId) return colors[0];
+                  return colors[userId % colors.length];
+                };
+                return (
+                  <div key={c.id} className="bg-dark-800 p-3 rounded-lg border border-dark-700">
+                    <div className="flex justify-between items-center mb-1">
+                      <span className={`text-xs font-bold ${getUserColor(c.user)}`}>{getDisplayName(c)}</span>
+                      <span className="text-[10px] text-gray-500">{new Date(c.created_at).toLocaleString('pt-BR')}</span>
+                    </div>
+                    <p className="text-sm text-gray-300">{c.text}</p>
+                  </div>
+                );
+              })
+            )}
+          </div>
+          
+          {localStorage.getItem('token') ? (
+            <form onSubmit={handlePostComment} className="flex gap-2">
+              <input 
+                type="text" 
+                value={newComment} 
+                onChange={e => setNewComment(e.target.value)} 
+                placeholder="Mande sua resenha..." 
+                className="flex-1 bg-dark-800 border border-dark-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-neon-green"
+              />
+              <button type="submit" disabled={!newComment.trim()} className="bg-neon-green text-dark-900 px-4 py-2 rounded-lg font-bold disabled:opacity-50 hover:bg-opacity-90">
+                Enviar
+              </button>
+            </form>
+          ) : (
+            <div className="text-xs text-gray-500 text-center">Faça login para participar da resenha.</div>
+          )}
+        </div>
+
       </div>
     </div>
   );

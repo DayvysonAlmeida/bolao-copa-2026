@@ -41,7 +41,7 @@ STATUS_MAP = {
 
 # Fases eliminatórias mapeadas para label amigável (grupo = código da fase)
 PHASE_LABELS = {
-    "R32": "Oitavas de Final",
+    "R32": "16-avos de Final",
     "R16": "Oitavas de Final",
     "QF":  "Quartas de Final",
     "SF":  "Semifinal",

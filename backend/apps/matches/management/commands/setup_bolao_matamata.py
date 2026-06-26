@@ -54,7 +54,7 @@ class Command(BaseCommand):
             bolao_matamata, created = Bolao.objects.get_or_create(
                 name="Copa 2026 — Mata-Mata",
                 defaults={
-                    'description': 'Bolão da fase de mata-mata da Copa do Mundo 2026. Regras especiais para pênaltis!',
+                    'description': 'Bolão da fase de mata-mata da Copa do Mundo 2026.',
                     'status': 'OPEN',
                     'scoring_mode': 'KNOCKOUT',
                     'is_active': True,

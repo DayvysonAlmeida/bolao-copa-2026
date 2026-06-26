@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Team, Match, Bolao
+from .models import Team, Match, Bolao, MatchComment, BolaoComment
 
 class TeamSerializer(serializers.ModelSerializer):
     class Meta:
@@ -38,3 +38,23 @@ class MatchSerializer(serializers.ModelSerializer):
             'flag_home', 'flag_away', 'group', 'home_score', 'away_score', 'match_date', 'status',
             'bolao', 'bolao_name', 'phase', 'penalty_winner', 'penalty_winner_name', 'scoring_mode'
         ]
+
+class MatchCommentSerializer(serializers.ModelSerializer):
+    username = serializers.ReadOnlyField(source='user.username')
+    first_name = serializers.ReadOnlyField(source='user.first_name')
+    last_name = serializers.ReadOnlyField(source='user.last_name')
+
+    class Meta:
+        model = MatchComment
+        fields = ['id', 'match', 'user', 'username', 'first_name', 'last_name', 'text', 'created_at']
+        read_only_fields = ['user']
+
+class BolaoCommentSerializer(serializers.ModelSerializer):
+    username = serializers.ReadOnlyField(source='user.username')
+    first_name = serializers.ReadOnlyField(source='user.first_name')
+    last_name = serializers.ReadOnlyField(source='user.last_name')
+
+    class Meta:
+        model = BolaoComment
+        fields = ['id', 'bolao', 'user', 'username', 'first_name', 'last_name', 'text', 'created_at']
+        read_only_fields = ['user']

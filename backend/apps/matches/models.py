@@ -122,3 +122,38 @@ class Match(models.Model):
                 if bet.points_earned != 0:
                     bet.points_earned = 0
                     bet.save()
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# RESENHA — Chat/Comentários por Partida
+# ═══════════════════════════════════════════════════════════════════════════════
+from django.contrib.auth.models import User
+
+class MatchComment(models.Model):
+    """Comentários dos usuários na resenha de cada jogo"""
+    match = models.ForeignKey(Match, on_delete=models.CASCADE, related_name='comments', verbose_name="Partida")
+    user = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name="Usuário")
+    text = models.TextField(verbose_name="Comentário")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Enviado em")
+
+    class Meta:
+        verbose_name = "Resenha"
+        verbose_name_plural = "Resenhas"
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.user.username} sobre {self.match}"
+
+class BolaoComment(models.Model):
+    """Comentários globais do bolão"""
+    bolao = models.ForeignKey(Bolao, on_delete=models.CASCADE, related_name='comments', verbose_name="Bolão")
+    user = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name="Usuário")
+    text = models.TextField(verbose_name="Comentário")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Enviado em")
+
+    class Meta:
+        verbose_name = "Resenha do Bolão"
+        verbose_name_plural = "Resenhas dos Bolões"
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.user.username} no bolão {self.bolao}"

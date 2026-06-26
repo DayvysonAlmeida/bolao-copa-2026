@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
-from apps.matches.views import TeamViewSet, MatchViewSet, BolaoViewSet
+from apps.matches.views import TeamViewSet, MatchViewSet, BolaoViewSet, MatchCommentViewSet, BolaoCommentViewSet
 from apps.bets.views import BetViewSet, RankingListView, MyBetsListView, RegisterView, UserProfileView, StatsView
 
 # O Router cria automaticamente as rotas de listar e detalhar
@@ -11,6 +11,8 @@ router.register(r'teams', TeamViewSet)
 router.register(r'matches', MatchViewSet)
 router.register(r'bets', BetViewSet)
 router.register(r'bolaos', BolaoViewSet)  # NOVO: Endpoints de bolão
+router.register(r'comments', MatchCommentViewSet, basename='comments')
+router.register(r'bolao_comments', BolaoCommentViewSet, basename='bolao_comments')
 
 urlpatterns = [
     path('admin/', admin.site.urls),

@@ -48,11 +48,11 @@ export function BolaoJoinCard({ bolao, accessToken, API_URL, onJoinSuccess }) {
               </li>
               <li className="flex gap-3">
                 <span className="flex-shrink-0 mt-0.5 text-lg">✓</span>
-                <span><strong>3 Pontos:</strong> Acertar o vencedor da partida nos 90 minutos.</span>
+                <span><strong>3 Pontos:</strong> Acertar o resultado da partida nos 90 minutos.</span>
               </li>
               <li className="flex gap-3 mt-4 pt-4 border-t border-dark-700">
                 <span className="flex-shrink-0 mt-0.5 text-lg">⚖️</span>
-                <span><strong>Desempate:</strong> 1º Mais cravadas, 2º Mais acertos de vencedor, 3º Data de inscrição.</span>
+                <span><strong>Desempate:</strong> 1º Mais cravadas, 2º Mais acertos dos resultados.</span>
               </li>
             </ul>
           </div>

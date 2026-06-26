@@ -277,3 +277,44 @@ class BolaoViewSet(viewsets.ReadOnlyModelViewSet):
             "lanterna": lanterna or "Ninguém ainda",
             "media_pontos": media_pontos,
         })
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# RESENHA VIEWSET — Para o Chat das Partidas
+# ═══════════════════════════════════════════════════════════════════════════════
+from .models import MatchComment, BolaoComment
+from .serializers import MatchCommentSerializer, BolaoCommentSerializer
+
+class MatchCommentViewSet(viewsets.ModelViewSet):
+    serializer_class = MatchCommentSerializer
+    
+    def get_permissions(self):
+        # Apenas usuários logados podem comentar, mas qualquer um pode ler (ou apenas logados podem ler também)
+        from rest_framework.permissions import IsAuthenticatedOrReadOnly
+        return [IsAuthenticatedOrReadOnly()]
+
+    def get_queryset(self):
+        queryset = MatchComment.objects.select_related('user').all()
+        match_id = self.request.query_params.get('match', None)
+        if match_id is not None:
+            queryset = queryset.filter(match_id=match_id)
+        return queryset
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+
+class BolaoCommentViewSet(viewsets.ModelViewSet):
+    serializer_class = BolaoCommentSerializer
+    
+    def get_permissions(self):
+        from rest_framework.permissions import IsAuthenticatedOrReadOnly
+        return [IsAuthenticatedOrReadOnly()]
+
+    def get_queryset(self):
+        queryset = BolaoComment.objects.select_related('user').all()
+        bolao_id = self.request.query_params.get('bolao', None)
+        if bolao_id is not None:
+            queryset = queryset.filter(bolao_id=bolao_id)
+        return queryset
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
