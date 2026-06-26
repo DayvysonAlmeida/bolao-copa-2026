@@ -17,7 +17,6 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated, AllowAny
 import logging
-import logging
 
 logger = logging.getLogger(__name__)
 
@@ -36,7 +35,7 @@ class MatchViewSet(viewsets.ReadOnlyModelViewSet):
             cache.set('last_football_sync', True, timeout=60)
             def run_sync():
                 try:
-                    call_command('sync_worldcup26')
+                    call_command('sync_football_data')
                 except Exception as e:
                     logger.error(f"Erro no auto-sync de jogos: {e}")
                     cache.delete('last_football_sync')
@@ -54,7 +53,7 @@ class MatchViewSet(viewsets.ReadOnlyModelViewSet):
             return Response({"error": "Apenas admins podem rodar a sincronização"}, status=status.HTTP_403_FORBIDDEN)
         
         try:
-            call_command('sync_worldcup26')
+            call_command('sync_football_data')
             # Limpa o cache após sincronizar
             cache.delete('last_football_sync')
             return Response({"message": "Sincronização da Copa do Mundo concluída com sucesso!"})
@@ -66,8 +65,6 @@ class MatchViewSet(viewsets.ReadOnlyModelViewSet):
 # ═══════════════════════════════════════════════════════════════════════════════
 # BOLÃO VIEWSET — Endpoints novos (NÃO mexe nos existentes acima)
 # ═══════════════════════════════════════════════════════════════════════════════
-from django.db.models import Sum, Count, Q
-from django.db.models.functions import Coalesce
 from django.db.models import Sum, Count, Q
 from django.db.models.functions import Coalesce
 
@@ -210,7 +207,7 @@ class BolaoViewSet(viewsets.ReadOnlyModelViewSet):
             
             def run_sync_bolao():
                 try:
-                    call_command('sync_worldcup26')
+                    call_command('sync_football_data')
                 except Exception as e:
                     logger.error(f"Erro no auto-sync de jogos no bolão: {e}")
                     cache.delete('last_football_sync')

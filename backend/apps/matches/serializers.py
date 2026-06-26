@@ -36,7 +36,7 @@ class MatchSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'home_team', 'away_team', 'home_team_name', 'away_team_name', 
             'flag_home', 'flag_away', 'group', 'home_score', 'away_score', 'match_date', 'status',
-            'bolao', 'bolao_name', 'phase', 'penalty_winner', 'penalty_winner_name', 'scoring_mode'
+            'bolao', 'bolao_name', 'phase', 'penalty_winner', 'penalty_winner_name', 'scoring_mode', 'match_number'
         ]
 
 class MatchCommentSerializer(serializers.ModelSerializer):

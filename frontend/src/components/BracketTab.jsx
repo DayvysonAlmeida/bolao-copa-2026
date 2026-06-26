@@ -27,7 +27,7 @@ const BracketMatchCard = ({ match, loggedUser, getUserBetForMatch, handleOpenMod
   return (
     <div 
       onClick={() => handleOpenModal(match)}
-      className="w-48 h-24 bg-dark-800 border border-dark-700 rounded-lg overflow-hidden cursor-pointer hover:border-neon-green hover:shadow-[0_0_10px_rgba(4,211,97,0.3)] transition-all flex flex-col relative z-20"
+      className="w-40 h-24 bg-dark-800 border border-dark-700 rounded-lg overflow-hidden cursor-pointer hover:border-neon-green hover:shadow-[0_0_10px_rgba(4,211,97,0.3)] transition-all flex flex-col relative z-20"
     >
       <div className="bg-dark-900 border-b border-dark-700 text-center py-0.5 text-[9px] text-gray-400 font-mono tracking-wider h-5 flex items-center justify-center">
         {formattedDate} • {formattedTime}
@@ -90,51 +90,35 @@ const BracketMatchCard = ({ match, loggedUser, getUserBetForMatch, handleOpenMod
 
 
 export const BracketTab = ({ matches, loggedUser, getUserBetForMatch, handleOpenModal, betChangeDeadlineLabel }) => {
-  // Agrupar jogos pelas fases do Mata-Mata
-  const groupedMatches = {
-    'ROUND_32': matches.filter(m => m.phase === 'R32' || m.phase === 'ROUND_32'),
-    'ROUND_16': matches.filter(m => m.phase === 'R16' || m.phase === 'ROUND_16'),
-    'QUARTER_FINALS': matches.filter(m => m.phase === 'QF' || m.phase === 'QUARTER_FINALS'),
-    'SEMI_FINALS': matches.filter(m => m.phase === 'SF' || m.phase === 'SEMI_FINALS'),
-    'FINAL': matches.filter(m => m.phase === 'FINAL' || m.phase === 'TEST_FINAL')
-  };
-  
-  const thirdPlaceMatches = matches.filter(m => m.phase === '3RD' || m.phase === 'THIRD_PLACE');
+  // Busca segura do jogo pelo número oficial da FIFA
+  const getMatchByNumber = (num) => matches.find(m => m.match_number === num) || null;
 
-  const getMatchesWithPadding = (phaseMatches, expectedCount) => {
-    const list = [...phaseMatches];
-    while(list.length < expectedCount) {
-      list.push(null);
-    }
-    return list;
-  };
+  // LADO ESQUERDO
+  const r32Left = [74, 77, 73, 75, 83, 84, 81, 82].map(getMatchByNumber);
+  const r16Left = [89, 90, 93, 94].map(getMatchByNumber);
+  const qfLeft = [97, 98].map(getMatchByNumber);
+  const sfLeft = [101].map(getMatchByNumber);
 
-  const roundOf32 = getMatchesWithPadding(groupedMatches['ROUND_32'] || [], 16);
-  const roundOf16 = getMatchesWithPadding(groupedMatches['ROUND_16'] || [], 8);
-  const quarters = getMatchesWithPadding(groupedMatches['QUARTER_FINALS'] || [], 4);
-  const semis = getMatchesWithPadding(groupedMatches['SEMI_FINALS'] || [], 2);
-  const finals = getMatchesWithPadding(groupedMatches['FINAL'] || [], 1);
+  // LADO DIREITO
+  const r32Right = [76, 78, 79, 80, 86, 88, 85, 87].map(getMatchByNumber);
+  const r16Right = [91, 92, 95, 96].map(getMatchByNumber);
+  const qfRight = [99, 100].map(getMatchByNumber);
+  const sfRight = [102].map(getMatchByNumber);
 
-  // Dividir para layout espelhado
-  const r32Left = roundOf32.slice(0, 8);
-  const r32Right = roundOf32.slice(8, 16);
-  const r16Left = roundOf16.slice(0, 4);
-  const r16Right = roundOf16.slice(4, 8);
-  const qfLeft = quarters.slice(0, 2);
-  const qfRight = quarters.slice(2, 4);
-  const sfLeft = semis.slice(0, 1);
-  const sfRight = semis.slice(1, 2);
+  // FINAIS
+  const finals = [104].map(getMatchByNumber);
+  const thirdPlaceMatches = matches.filter(m => m.match_number === 103);
 
   const sharedProps = { loggedUser, getUserBetForMatch, handleOpenModal, betChangeDeadlineLabel };
 
   return (
     <div className="w-full overflow-x-auto pb-12 bracket-container">
-      <div className="flex justify-between p-4 gap-12 mx-auto mt-8" style={{ width: 'max-content', minHeight: '1000px' }}>
+      <div className="flex justify-between p-4 gap-8 mx-auto mt-8" style={{ width: 'max-content', minHeight: '1000px' }}>
         
         {/* LADO ESQUERDO */}
-        <div className="flex gap-12">
+        <div className="flex gap-8">
           {/* 16-AVOS (Esquerda) */}
-          <div className="flex flex-col h-full w-48 relative">
+          <div className="flex flex-col h-full w-40 relative">
             <h3 className="text-center text-neon-green font-bold text-sm absolute -top-8 w-full">16-avos</h3>
             {r32Left.map((match, idx) => (
               <div key={`r32l-${idx}`} className="flex-1 relative flex flex-col justify-center">
@@ -143,59 +127,59 @@ export const BracketTab = ({ matches, loggedUser, getUserBetForMatch, handleOpen
                 </div>
                 {/* Bracket Right Connector `]` */}
                 {idx % 2 === 0 && (
-                  <div className="absolute right-[-1.5rem] w-[1.5rem] border-r-2 border-t-2 border-b-2 border-dark-600 top-1/2 h-full z-10 rounded-r-xl"></div>
+                  <div className="absolute right-[-1rem] w-[1rem] border-r-2 border-t-2 border-b-2 border-dark-600 top-1/2 h-full z-10 rounded-r-xl"></div>
                 )}
               </div>
             ))}
           </div>
 
           {/* OITAVAS (Esquerda) */}
-          <div className="flex flex-col h-full w-48 relative">
+          <div className="flex flex-col h-full w-40 relative">
             <h3 className="text-center text-neon-green font-bold text-sm absolute -top-8 w-full">Oitavas</h3>
             {r16Left.map((match, idx) => (
               <div key={`r16l-${idx}`} className="flex-1 relative flex flex-col justify-center">
                 <div className="relative z-20">
                   {/* Connector line Left */}
-                  <div className="absolute left-[-1.5rem] w-[1.5rem] border-b-2 border-dark-600 top-1/2"></div>
+                  <div className="absolute left-[-1rem] w-[1rem] border-b-2 border-dark-600 top-1/2"></div>
                   <BracketMatchCard match={match} {...sharedProps} />
                 </div>
                 {/* Bracket Right Connector `]` */}
                 {idx % 2 === 0 && (
-                  <div className="absolute right-[-1.5rem] w-[1.5rem] border-r-2 border-t-2 border-b-2 border-dark-600 top-1/2 h-full z-10 rounded-r-xl"></div>
+                  <div className="absolute right-[-1rem] w-[1rem] border-r-2 border-t-2 border-b-2 border-dark-600 top-1/2 h-full z-10 rounded-r-xl"></div>
                 )}
               </div>
             ))}
           </div>
 
           {/* QUARTAS (Esquerda) */}
-          <div className="flex flex-col h-full w-48 relative">
+          <div className="flex flex-col h-full w-40 relative">
             <h3 className="text-center text-neon-green font-bold text-sm absolute -top-8 w-full">Quartas</h3>
             {qfLeft.map((match, idx) => (
               <div key={`qfl-${idx}`} className="flex-1 relative flex flex-col justify-center">
                 <div className="relative z-20">
                   {/* Connector line Left */}
-                  <div className="absolute left-[-1.5rem] w-[1.5rem] border-b-2 border-dark-600 top-1/2"></div>
+                  <div className="absolute left-[-1rem] w-[1rem] border-b-2 border-dark-600 top-1/2"></div>
                   <BracketMatchCard match={match} {...sharedProps} />
                 </div>
                 {/* Bracket Right Connector `]` */}
                 {idx % 2 === 0 && (
-                  <div className="absolute right-[-1.5rem] w-[1.5rem] border-r-2 border-t-2 border-b-2 border-dark-600 top-1/2 h-full z-10 rounded-r-xl"></div>
+                  <div className="absolute right-[-1rem] w-[1rem] border-r-2 border-t-2 border-b-2 border-dark-600 top-1/2 h-full z-10 rounded-r-xl"></div>
                 )}
               </div>
             ))}
           </div>
 
           {/* SEMIFINAL (Esquerda) */}
-          <div className="flex flex-col h-full w-48 relative">
+          <div className="flex flex-col h-full w-40 relative">
             <h3 className="text-center text-neon-green font-bold text-sm absolute -top-8 w-full">Semifinal</h3>
             {sfLeft.map((match, idx) => (
               <div key={`sfl-${idx}`} className="flex-1 relative flex flex-col justify-center">
                 <div className="relative z-20">
                   {/* Connector line Left */}
-                  <div className="absolute left-[-1.5rem] w-[1.5rem] border-b-2 border-dark-600 top-1/2"></div>
+                  <div className="absolute left-[-1rem] w-[1rem] border-b-2 border-dark-600 top-1/2"></div>
                   <BracketMatchCard match={match} {...sharedProps} />
                   {/* Connector line Right to Final */}
-                  <div className="absolute right-[-1.5rem] w-[1.5rem] border-b-2 border-dark-600 top-1/2"></div>
+                  <div className="absolute right-[-1rem] w-[1rem] border-b-2 border-dark-600 top-1/2"></div>
                 </div>
               </div>
             ))}
@@ -209,8 +193,8 @@ export const BracketTab = ({ matches, loggedUser, getUserBetForMatch, handleOpen
               <div key={`fin-${idx}`} className="relative flex items-center scale-110 shadow-[0_0_30px_rgba(250,204,21,0.2)] rounded-lg z-20">
                 <h3 className="text-center text-yellow-400 font-bold text-sm absolute bottom-full mb-4 w-full flex items-center justify-center gap-2 whitespace-nowrap left-1/2 -translate-x-1/2">🏆 Grande Final 🏆</h3>
                 {/* Connector lines from both sides */}
-                <div className="absolute left-[-1.5rem] w-[1.5rem] border-b-2 border-dark-600 top-1/2"></div>
-                <div className="absolute right-[-1.5rem] w-[1.5rem] border-b-2 border-dark-600 top-1/2"></div>
+                <div className="absolute left-[-1rem] w-[1rem] border-b-2 border-dark-600 top-1/2"></div>
+                <div className="absolute right-[-1rem] w-[1rem] border-b-2 border-dark-600 top-1/2"></div>
                 <BracketMatchCard match={match} {...sharedProps} />
               </div>
             ))}
@@ -234,59 +218,59 @@ export const BracketTab = ({ matches, loggedUser, getUserBetForMatch, handleOpen
         {/* LADO DIREITO */}
         <div className="flex gap-12">
           {/* SEMIFINAL (Direita) */}
-          <div className="flex flex-col h-full w-48 relative">
+          <div className="flex flex-col h-full w-40 relative">
             <h3 className="text-center text-neon-green font-bold text-sm absolute -top-8 w-full">Semifinal</h3>
             {sfRight.map((match, idx) => (
               <div key={`sfr-${idx}`} className="flex-1 relative flex flex-col justify-center">
                 <div className="relative z-20">
                   {/* Connector line Left (to final) */}
-                  <div className="absolute left-[-1.5rem] w-[1.5rem] border-b-2 border-dark-600 top-1/2"></div>
+                  <div className="absolute left-[-1rem] w-[1rem] border-b-2 border-dark-600 top-1/2"></div>
                   <BracketMatchCard match={match} {...sharedProps} />
                   {/* Connector line Right */}
-                  <div className="absolute right-[-1.5rem] w-[1.5rem] border-b-2 border-dark-600 top-1/2"></div>
+                  <div className="absolute right-[-1rem] w-[1rem] border-b-2 border-dark-600 top-1/2"></div>
                 </div>
               </div>
             ))}
           </div>
 
           {/* QUARTAS (Direita) */}
-          <div className="flex flex-col h-full w-48 relative">
+          <div className="flex flex-col h-full w-40 relative">
             <h3 className="text-center text-neon-green font-bold text-sm absolute -top-8 w-full">Quartas</h3>
             {qfRight.map((match, idx) => (
               <div key={`qfr-${idx}`} className="flex-1 relative flex flex-col justify-center">
                 <div className="relative z-20">
                   <BracketMatchCard match={match} {...sharedProps} />
                   {/* Connector line Right */}
-                  <div className="absolute right-[-1.5rem] w-[1.5rem] border-b-2 border-dark-600 top-1/2"></div>
+                  <div className="absolute right-[-1rem] w-[1rem] border-b-2 border-dark-600 top-1/2"></div>
                 </div>
                 {/* Bracket Left Connector `[` */}
                 {idx % 2 === 0 && (
-                  <div className="absolute left-[-1.5rem] w-[1.5rem] border-l-2 border-t-2 border-b-2 border-dark-600 top-1/2 h-full z-10 rounded-l-xl"></div>
+                  <div className="absolute left-[-1rem] w-[1rem] border-l-2 border-t-2 border-b-2 border-dark-600 top-1/2 h-full z-10 rounded-l-xl"></div>
                 )}
               </div>
             ))}
           </div>
 
           {/* OITAVAS (Direita) */}
-          <div className="flex flex-col h-full w-48 relative">
+          <div className="flex flex-col h-full w-40 relative">
             <h3 className="text-center text-neon-green font-bold text-sm absolute -top-8 w-full">Oitavas</h3>
             {r16Right.map((match, idx) => (
               <div key={`r16r-${idx}`} className="flex-1 relative flex flex-col justify-center">
                 <div className="relative z-20">
                   <BracketMatchCard match={match} {...sharedProps} />
                   {/* Connector line Right */}
-                  <div className="absolute right-[-1.5rem] w-[1.5rem] border-b-2 border-dark-600 top-1/2"></div>
+                  <div className="absolute right-[-1rem] w-[1rem] border-b-2 border-dark-600 top-1/2"></div>
                 </div>
                 {/* Bracket Left Connector `[` */}
                 {idx % 2 === 0 && (
-                  <div className="absolute left-[-1.5rem] w-[1.5rem] border-l-2 border-t-2 border-b-2 border-dark-600 top-1/2 h-full z-10 rounded-l-xl"></div>
+                  <div className="absolute left-[-1rem] w-[1rem] border-l-2 border-t-2 border-b-2 border-dark-600 top-1/2 h-full z-10 rounded-l-xl"></div>
                 )}
               </div>
             ))}
           </div>
 
           {/* 16-AVOS (Direita) */}
-          <div className="flex flex-col h-full w-48 relative">
+          <div className="flex flex-col h-full w-40 relative">
             <h3 className="text-center text-neon-green font-bold text-sm absolute -top-8 w-full">16-avos</h3>
             {r32Right.map((match, idx) => (
               <div key={`r32r-${idx}`} className="flex-1 relative flex flex-col justify-center">
@@ -295,13 +279,12 @@ export const BracketTab = ({ matches, loggedUser, getUserBetForMatch, handleOpen
                 </div>
                 {/* Bracket Left Connector `[` */}
                 {idx % 2 === 0 && (
-                  <div className="absolute left-[-1.5rem] w-[1.5rem] border-l-2 border-t-2 border-b-2 border-dark-600 top-1/2 h-full z-10 rounded-l-xl"></div>
+                  <div className="absolute left-[-1rem] w-[1rem] border-l-2 border-t-2 border-b-2 border-dark-600 top-1/2 h-full z-10 rounded-l-xl"></div>
                 )}
               </div>
             ))}
           </div>
         </div>
-
       </div>
     </div>
   );

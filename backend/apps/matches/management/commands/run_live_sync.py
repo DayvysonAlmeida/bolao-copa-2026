@@ -29,7 +29,7 @@ class Command(BaseCommand):
                 self.stdout.write(f"[{now.strftime('%d/%m %H:%M:%S')}] ⚡ MODO ATIVO: Jogos acontecendo ou próximos. Sincronizando...")
                 try:
                     # Chama o sync normal (sem --only-finished, pois queremos atualizar jogos IN_PROGRESS)
-                    call_command('sync_worldcup26')
+                    call_command('sync_football_data')
                 except Exception as e:
                     self.stdout.write(self.style.ERROR(f"Erro no sync: {e}"))
                 

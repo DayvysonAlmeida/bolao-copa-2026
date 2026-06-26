@@ -13,3 +13,7 @@ python manage.py fix_worldcup_names
 
 echo "Executando setup do banco de dados (Migrações, Dados e Admin)..."
 python manage.py setup_deploy
+
+echo "Configurando o Bolão da Copa (Mata-Mata)..."
+python manage.py setup_bolao_matamata
+python manage.py setup_knockout_bracket
