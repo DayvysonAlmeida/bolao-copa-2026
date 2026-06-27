@@ -14,8 +14,9 @@ class Command(BaseCommand):
             self.stdout.write(self.style.ERROR("Bolão Mata-Mata não encontrado. Execute setup_bolao_matamata primeiro."))
             return
         
-        self.stdout.write(self.style.WARNING(f"Deletando partidas antigas do bolão '{bolao.name}'..."))
-        Match.objects.filter(bolao=bolao).delete()
+        if Match.objects.filter(bolao=bolao).exists():
+            self.stdout.write(self.style.SUCCESS("As partidas do bolão já existem. Pulando recriação para preservar os palpites e times reais."))
+            return
 
         def get_team(name):
             translation = {
