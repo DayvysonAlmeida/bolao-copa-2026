@@ -57,8 +57,7 @@ export function MatchRadarCard({ match, title, icon, carouselControls, allBets, 
         .filter(bet => {
             if (!searchQuery?.trim()) return true;
             const userIdx = ranking.findIndex(u => u.id === bet.user);
-            const user = userIdx !== -1 ? ranking[userIdx] : null;
-            const name = user ? (user.first_name || user.username) : `Usuário ${bet.user}`;
+            const name = bet.user_first_name || bet.user_username || `Usuário ${bet.user}`;
             return name.toLowerCase().includes(searchQuery.toLowerCase());
         });
 
@@ -247,7 +246,7 @@ export function MatchRadarCard({ match, title, icon, carouselControls, allBets, 
                             {otherBets.map(bet => {
                                 const userIndex = ranking.findIndex(u => u.id === bet.user);
                                 const user = userIndex !== -1 ? ranking[userIndex] : null;
-                                const userName = user ? (user.first_name || user.username) : `Usuário ${bet.user}`;
+                                const userName = bet.user_first_name || bet.user_username || `Usuário ${bet.user}`;
                                 const userInitials = userName.substring(0, 2).toUpperCase();
                                 
                                 let medal = '';
