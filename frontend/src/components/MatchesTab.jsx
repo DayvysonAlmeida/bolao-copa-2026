@@ -29,14 +29,52 @@ export function MatchesTab({ matches, loggedUser, getUserBetForMatch, handleOpen
     return passStatus && passDate;
   });
 
+  const getPhaseName = (phase) => {
+    const phases = {
+      'ROUND_32': '16-avos de Final',
+      'ROUND_16': 'Oitavas de Final',
+      'QUARTER_FINALS': 'Quartas de Final',
+      'SEMI_FINALS': 'Semifinais',
+      'THIRD_PLACE': 'Disputa do 3º Lugar',
+      'FINAL': 'Final',
+      'GROUP_STAGE': 'Fase de Grupos'
+    };
+    return phases[phase] || 'Fase Final';
+  };
+
   const groupedMatches = filteredMatches.reduce((acc, match) => {
-    const groupName = match.group ? `Grupo ${match.group}` : 'Fase Final';
+    let groupName;
+    if (match.scoring_mode === 'KNOCKOUT' || (match.phase && match.phase !== 'GROUP_STAGE')) {
+       groupName = getPhaseName(match.phase);
+    } else {
+       groupName = match.group && match.group !== '-' ? `Grupo ${match.group}` : 'Fase de Grupos';
+    }
+    
     if (!acc[groupName]) acc[groupName] = [];
     acc[groupName].push(match);
     return acc;
   }, {});
   
-  const sortedGroups = Object.keys(groupedMatches).sort();
+  const phaseOrder = [
+    'Fase de Grupos',
+    '16-avos de Final',
+    'Oitavas de Final',
+    'Quartas de Final',
+    'Semifinais',
+    'Disputa do 3º Lugar',
+    'Final',
+  ];
+
+  const sortedGroups = Object.keys(groupedMatches).sort((a, b) => {
+    const indexA = phaseOrder.indexOf(a);
+    const indexB = phaseOrder.indexOf(b);
+    
+    if (indexA !== -1 && indexB !== -1) return indexA - indexB;
+    if (indexA !== -1) return 1;
+    if (indexB !== -1) return -1;
+    
+    return a.localeCompare(b);
+  });
 
   return (
     <main className="max-w-6xl mx-auto flex flex-col gap-6 animate-fadeIn">

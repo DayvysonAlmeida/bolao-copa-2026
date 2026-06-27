@@ -1,3 +1,5 @@
+import { formatTeamName } from '../utils';
+
 export function MatchCard({ match, userBet, loggedUser, handleOpenModal, betChangeDeadlineLabel }) {
   const dateObj = new Date(match.match_date);
   const dayMonth = dateObj.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
@@ -55,8 +57,12 @@ export function MatchCard({ match, userBet, loggedUser, handleOpenModal, betChan
 
       <div className="flex items-center justify-between">
         <div className="flex flex-col items-center w-1/3">
-          <img src={match.flag_home} alt={match.home_team_name} className="w-12 h-8 rounded-sm shadow-md mb-2 object-cover" />
-          <span className="text-sm font-semibold text-center truncate w-full text-gray-300">{match.home_team_name}</span>
+          {match.flag_home ? (
+            <img src={match.flag_home} alt={match.home_team_name} className="w-12 h-8 rounded-sm shadow-md mb-2 object-cover" />
+          ) : (
+            <div className="w-12 h-8 bg-dark-700 rounded-sm mb-2 flex items-center justify-center text-xs border border-dark-600">?</div>
+          )}
+          <span className="text-sm font-semibold text-center truncate w-full text-gray-300">{formatTeamName(match.home_team_name)}</span>
         </div>
         <div className="text-3xl font-black text-white w-1/3 text-center flex flex-col justify-center items-center">
           <div className="flex justify-center items-center gap-3">
@@ -71,8 +77,12 @@ export function MatchCard({ match, userBet, loggedUser, handleOpenModal, betChan
           )}
         </div>
         <div className="flex flex-col items-center w-1/3">
-          <img src={match.flag_away} alt={match.away_team_name} className="w-12 h-8 rounded-sm shadow-md mb-2 object-cover" />
-          <span className="text-sm font-semibold text-center truncate w-full text-gray-300">{match.away_team_name}</span>
+          {match.flag_away ? (
+            <img src={match.flag_away} alt={match.away_team_name} className="w-12 h-8 rounded-sm shadow-md mb-2 object-cover" />
+          ) : (
+            <div className="w-12 h-8 bg-dark-700 rounded-sm mb-2 flex items-center justify-center text-xs border border-dark-600">?</div>
+          )}
+          <span className="text-sm font-semibold text-center truncate w-full text-gray-300">{formatTeamName(match.away_team_name)}</span>
         </div>
       </div>
       {loggedUser && userBet && (

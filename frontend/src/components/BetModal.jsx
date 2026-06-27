@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { formatTeamName } from '../utils';
 
 export function BetModal({ 
   selectedMatch, 
@@ -75,13 +76,13 @@ export function BetModal({
           <div className="flex items-center justify-between gap-4 bg-dark-900 p-4 rounded-xl border border-dark-700">
             <div className="flex flex-col items-center w-1/3 text-center">
               {selectedMatch.flag_home ? <img src={selectedMatch.flag_home} alt={selectedMatch.home_team_name} className="w-12 h-8 rounded mb-1 object-cover shadow" /> : <div className="w-12 h-8 bg-dark-700 rounded flex items-center justify-center text-xs mb-1 border border-dark-600">?</div>}
-              <span className="text-xs font-bold truncate w-full">{selectedMatch.home_team_name || 'A Definir'}</span>
+              <span className="text-xs font-bold truncate w-full">{formatTeamName(selectedMatch.home_team_name)}</span>
               <input type="number" min="0" value={homeBet} onChange={(e) => setHomeBet(e.target.value)} disabled={!selectedMatch.home_team_name || !selectedMatch.away_team_name} className="w-16 h-12 bg-dark-800 border border-dark-700 text-center text-xl font-bold rounded-lg mt-3 focus:border-neon-green focus:outline-none text-white disabled:opacity-50" />
             </div>
             <div className="text-xl font-bold text-gray-600">X</div>
             <div className="flex flex-col items-center w-1/3 text-center">
               {selectedMatch.flag_away ? <img src={selectedMatch.flag_away} alt={selectedMatch.away_team_name} className="w-12 h-8 rounded mb-1 object-cover shadow" /> : <div className="w-12 h-8 bg-dark-700 rounded flex items-center justify-center text-xs mb-1 border border-dark-600">?</div>}
-              <span className="text-xs font-bold truncate w-full">{selectedMatch.away_team_name || 'A Definir'}</span>
+              <span className="text-xs font-bold truncate w-full">{formatTeamName(selectedMatch.away_team_name)}</span>
               <input type="number" min="0" value={awayBet} onChange={(e) => setHomeBetAway(e.target.value)} disabled={!selectedMatch.home_team_name || !selectedMatch.away_team_name} className="w-16 h-12 bg-dark-800 border border-dark-700 text-center text-xl font-bold rounded-lg mt-3 focus:border-neon-green focus:outline-none text-white disabled:opacity-50" />
             </div>
           </div>

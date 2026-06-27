@@ -1,4 +1,5 @@
 import React from 'react';
+import { formatTeamName } from '../utils';
 
 // Helper component for a single match in the bracket
 const BracketMatchCard = ({ match, loggedUser, getUserBetForMatch, handleOpenModal, betChangeDeadlineLabel }) => {
@@ -41,7 +42,7 @@ const BracketMatchCard = ({ match, loggedUser, getUserBetForMatch, handleOpenMod
             ) : (
               <div className="w-4 h-4 bg-dark-700 rounded-full border border-dark-600 flex items-center justify-center text-[8px]">?</div>
             )}
-            <span className="truncate font-semibold text-gray-200 text-xs">{match.home_team_name || 'A Definir'}</span>
+            <span className="truncate font-semibold text-gray-200 text-xs">{formatTeamName(match.home_team_name)}</span>
           </div>
           <div className={`font-bold w-5 text-center text-xs ${showBetInsteadOfScore ? 'text-neon-green' : 'text-white'}`}>
             {scoreHome !== null ? scoreHome : '-'}
@@ -56,7 +57,7 @@ const BracketMatchCard = ({ match, loggedUser, getUserBetForMatch, handleOpenMod
             ) : (
               <div className="w-4 h-4 bg-dark-700 rounded-full border border-dark-600 flex items-center justify-center text-[8px]">?</div>
             )}
-            <span className="truncate font-semibold text-gray-200 text-xs">{match.away_team_name || 'A Definir'}</span>
+            <span className="truncate font-semibold text-gray-200 text-xs">{formatTeamName(match.away_team_name)}</span>
           </div>
           <div className={`font-bold w-5 text-center text-xs ${showBetInsteadOfScore ? 'text-neon-green' : 'text-white'}`}>
             {scoreAway !== null ? scoreAway : '-'}
