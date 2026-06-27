@@ -37,12 +37,6 @@ class BetSerializer(serializers.ModelSerializer):
             if timezone.now() >= match.match_date:
                 raise serializers.ValidationError("O jogo já começou! Apostas bloqueadas pelo horário.")
 
-        # Validação de Pênaltis no Mata-Mata
-        if match.bolao and match.bolao.scoring_mode == 'KNOCKOUT':
-            if home_score is not None and away_score is not None and home_score == away_score:
-                if not penalty_winner:
-                    raise serializers.ValidationError("No Mata-Mata, em caso de empate, você deve informar o vencedor dos pênaltis.")
-
         return data
 
 
