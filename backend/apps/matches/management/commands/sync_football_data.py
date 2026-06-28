@@ -137,6 +137,10 @@ class Command(BaseCommand):
             api_match_date = parse_datetime(utc_date_str) if utc_date_str else None
 
             is_knockout = phase in ["ROUND_32", "ROUND_16", "QUARTER_FINALS", "SEMI_FINALS", "THIRD_PLACE", "FINAL"]
+            
+            # IGNORAR MATA-MATA DA API ATÉ A COPA (Evita criar amistosos falsos no lugar)
+            if is_knockout:
+                continue
 
             if is_knockout and api_match_date:
                 match_qs = Match.objects.filter(bolao__scoring_mode='KNOCKOUT', match_date=api_match_date)
