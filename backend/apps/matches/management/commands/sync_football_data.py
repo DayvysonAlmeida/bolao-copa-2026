@@ -138,64 +138,85 @@ class Command(BaseCommand):
 
             is_knockout = phase in ["ROUND_32", "ROUND_16", "QUARTER_FINALS", "SEMI_FINALS", "THIRD_PLACE", "FINAL"]
 
-            if is_knockout and api_match_date:
-                match_qs = Match.objects.filter(bolao__scoring_mode='KNOCKOUT', match_date=api_match_date)
+            if is_knockout:
+                match_qs = Match.objects.filter(bolao__scoring_mode='KNOCKOUT', home_team__name=home_ptbr, away_team__name=away_ptbr)
+                if not match_qs.exists() and api_match_date:
+                    match_qs = Match.objects.filter(bolao__scoring_mode='KNOCKOUT', match_date=api_match_date)
             else:
                 match_qs = Match.objects.filter(home_team__name=home_ptbr, away_team__name=away_ptbr)
             
             if match_qs.exists():
-                match_obj = match_qs.first()
-                
-                # Se for Mata-Mata, atualiza os times para substituir os placeholders (ex: "W74") pelos times reais da API
-                if is_knockout:
-                    team_home, _ = Team.objects.get_or_create(name=home_ptbr, defaults={'group': '-'})
-                    team_away, _ = Team.objects.get_or_create(name=away_ptbr, defaults={'group': '-'})
-                    match_obj.home_team = team_home
-                    match_obj.away_team = team_away
+                for match_obj in match_qs:
+                    # Se for Mata-Mata, atualiza os times para substituir os placeholders (ex: "W74") pelos times reais da API
+                    if is_knockout:
+                        team_home, _ = Team.objects.get_or_create(name=home_ptbr, defaults={'group': '-'})
+                        team_away, _ = Team.objects.get_or_create(name=away_ptbr, defaults={'group': '-'})
+                        match_obj.home_team = team_home
+                        match_obj.away_team = team_away
 
-                
-                if match_obj.status != 'FINISHED' and status == 'FINISHED':
-                    teve_jogo_finalizado_agora = True
-                
-                if api_status in ["IN_PLAY", "PAUSED", "FINISHED", "AWARDED"]:
-                    if home_score is not None and away_score is not None:
-                        match_obj.home_score = home_score
-                        match_obj.away_score = away_score
-                
-                match_obj.status = status
+                    if match_obj.status != 'FINISHED' and status == 'FINISHED':
+                        teve_jogo_finalizado_agora = True
+                    
+                    if api_status in ["IN_PLAY", "PAUSED", "FINISHED", "AWARDED"]:
+                        if home_score is not None and away_score is not None:
+                            match_obj.home_score = home_score
+                            match_obj.away_score = away_score
+                    
+                    match_obj.status = status
 
-                # NOVO: Atualizar phase (aditivo)
-                if phase:
-                    match_obj.phase = phase
+                    # NOVO: Atualizar phase (aditivo)
+                    if phase:
+                        match_obj.phase = phase
 
-                # NOVO: Atualizar penalty_winner se houve pênaltis
-                if pen_home is not None and pen_away is not None and pen_home != pen_away:
-                    try:
-                        if pen_home > pen_away:
-                            match_obj.penalty_winner = match_obj.home_team
-                        else:
-                            match_obj.penalty_winner = match_obj.away_team
-                    except Exception:
-                        pass  # Não quebra o sync se der erro
-                
-                horario_atualizado = False
-                if api_match_date and match_obj.match_date != api_match_date:
-                    match_obj.match_date = api_match_date
-                    horario_atualizado = True
-                
-                match_obj.save() # Dispara cálculo de pontos do modelo Match
-                
-                jogos_atualizados += 1
-                
-                msg = f"  [ATUALIZADO] Atualizado: {home_ptbr} x {away_ptbr} -> Status: {status} Placar: {home_score}x{away_score}"
-                if phase != 'GROUP_STAGE':
-                    msg += f" | Fase: {phase}"
-                if match_obj.penalty_winner:
-                    msg += f" | Pênaltis: {match_obj.penalty_winner.name}"
-                if horario_atualizado:
-                    msg += f" | [TEMPO] Horário ajustado!"
-                
-                self.stdout.write(msg)
+                    # NOVO: Atualizar penalty_winner se houve pênaltis
+                    if pen_home is not None and pen_away is not None and pen_home != pen_away:
+                        try:
+                            if pen_home > pen_away:
+                                match_obj.penalty_winner = match_obj.home_team
+                            else:
+                                match_obj.penalty_winner = match_obj.away_team
+                        except Exception:
+                            pass  # Não quebra o sync se der erro
+                    
+                    horario_atualizado = False
+                    if api_match_date and match_obj.match_date != api_match_date:
+                        match_obj.match_date = api_match_date
+                        horario_atualizado = True
+                    
+                    match_obj.save() # Dispara cálculo de pontos do modelo Match
+                    
+                    # LOGICA DE AVANÇO DE FASE (Mata-Mata)
+                    if match_obj.status == 'FINISHED' and is_knockout and match_obj.match_number:
+                        winner = None
+                        if match_obj.penalty_winner:
+                            winner = match_obj.penalty_winner
+                        elif match_obj.home_score is not None and match_obj.away_score is not None:
+                            if match_obj.home_score > match_obj.away_score:
+                                winner = match_obj.home_team
+                            elif match_obj.away_score > match_obj.home_score:
+                                winner = match_obj.away_team
+                        
+                        if winner:
+                            placeholder_w = f"W{match_obj.match_number}"
+                            Match.objects.filter(home_team__name=placeholder_w, bolao=match_obj.bolao).update(home_team=winner)
+                            Match.objects.filter(away_team__name=placeholder_w, bolao=match_obj.bolao).update(away_team=winner)
+                            
+                            loser = match_obj.away_team if winner == match_obj.home_team else match_obj.home_team
+                            placeholder_l = f"RU{match_obj.match_number}"
+                            Match.objects.filter(home_team__name=placeholder_l, bolao=match_obj.bolao).update(home_team=loser)
+                            Match.objects.filter(away_team__name=placeholder_l, bolao=match_obj.bolao).update(away_team=loser)
+
+                    jogos_atualizados += 1
+                    
+                    msg = f"  [ATUALIZADO] Atualizado: {home_ptbr} x {away_ptbr} -> Status: {status} Placar: {home_score}x{away_score}"
+                    if phase != 'GROUP_STAGE':
+                        msg += f" | Fase: {phase}"
+                    if match_obj.penalty_winner:
+                        msg += f" | Pênaltis: {match_obj.penalty_winner.name}"
+                    if horario_atualizado:
+                        msg += f" | [TEMPO] Horário ajustado!"
+                    
+                    self.stdout.write(msg)
             else:
                 jogos_nao_encontrados += 1
                 self.stdout.write(self.style.WARNING(f"  [AVISO] Não encontrado no banco: {home_en} ({home_ptbr}) x {away_en} ({away_ptbr})"))

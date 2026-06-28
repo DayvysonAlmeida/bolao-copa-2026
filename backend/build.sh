@@ -17,3 +17,6 @@ python manage.py fix_worldcup_names
 echo "Configurando o Bolão da Copa (Mata-Mata)..."
 python manage.py setup_bolao_matamata
 python manage.py setup_knockout_bracket
+
+echo "Sincronizando dados das partidas com a API..."
+python manage.py sync_football_data

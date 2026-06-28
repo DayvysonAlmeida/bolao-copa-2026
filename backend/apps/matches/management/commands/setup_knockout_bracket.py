@@ -14,9 +14,9 @@ class Command(BaseCommand):
             self.stdout.write(self.style.ERROR("Bolão Mata-Mata não encontrado. Execute setup_bolao_matamata primeiro."))
             return
         
-        if Match.objects.filter(bolao=bolao).exists():
-            self.stdout.write(self.style.SUCCESS("As partidas do bolão já existem. Pulando recriação para preservar os palpites e times reais."))
-            return
+        # if Match.objects.filter(bolao=bolao).exists():
+        #     self.stdout.write(self.style.SUCCESS("As partidas do bolão já existem. Pulando recriação para preservar os palpites e times reais."))
+        #     return
 
         def get_team(name):
             translation = {
@@ -90,6 +90,9 @@ class Command(BaseCommand):
         ]
 
         for m_num, home_str, away_str, dt_str, phase in matches_data:
+            if Match.objects.filter(bolao=bolao, match_number=m_num).exists():
+                continue
+                
             home = get_team(home_str)
             away = get_team(away_str)
             dt = datetime.strptime(dt_str, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=dt_timezone.utc)
