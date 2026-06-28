@@ -43,10 +43,13 @@ function App() {
   useEffect(() => {
     if (activeBolao) {
       localStorage.setItem('activeBolao', JSON.stringify(activeBolao));
+      if (activeBolao.scoring_mode !== 'KNOCKOUT' && activeTab === 'bracket') {
+        setActiveTab('matches');
+      }
     } else {
       localStorage.removeItem('activeBolao');
     }
-  }, [activeBolao]);
+  }, [activeBolao, activeTab]);
   const [allBolaos, setAllBolaos] = useState([]);
 
   const {
@@ -403,6 +406,7 @@ function App() {
               getUserBetForMatch={getUserBetForMatch}
               handleOpenModal={handleOpenModal}
               betChangeDeadlineLabel={betChangeDeadlineLabel}
+              activeBolao={activeBolao}
             />
           )}
 

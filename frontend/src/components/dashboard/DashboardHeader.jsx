@@ -46,8 +46,14 @@ export function DashboardHeader({
             </div>
             <div>
               <p className="text-[10px] text-gray-400 uppercase tracking-wider">Sua posição</p>
-              <p className="font-black text-base text-neon-green leading-tight">
-                {userRankPos + 1}º lugar · <span className="text-white">{myPoints} pts</span>
+              <p className="font-black text-base text-neon-green leading-tight flex items-center gap-1.5">
+                {userRankPos + 1}º lugar
+                <span className="text-sm">
+                    {userRankData.trend === 'UP' && <span className="text-neon-green" title="Subiu no ranking">↑</span>}
+                    {userRankData.trend === 'DOWN' && <span className="text-red-500" title="Desceu no ranking">↓</span>}
+                    {(!userRankData.trend || userRankData.trend === 'SAME') && <span className="text-dark-600" title="Manteve">-</span>}
+                </span>
+                <span className="text-gray-500 font-normal ml-1">·</span> <span className="text-white ml-1">{myPoints} pts</span>
               </p>
             </div>
             {isLeader && <span className="text-2xl">👑</span>}

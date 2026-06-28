@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { MatchCard } from './MatchCard';
 
-export function MatchesTab({ matches, loggedUser, getUserBetForMatch, handleOpenModal, betChangeDeadlineLabel }) {
+export function MatchesTab({ matches, loggedUser, getUserBetForMatch, handleOpenModal, betChangeDeadlineLabel, activeBolao }) {
   const [filter, setFilter] = useState('all');
   const [dateFilter, setDateFilter] = useState('all');
 
@@ -44,7 +44,9 @@ export function MatchesTab({ matches, loggedUser, getUserBetForMatch, handleOpen
 
   const groupedMatches = filteredMatches.reduce((acc, match) => {
     let groupName;
-    if (match.scoring_mode === 'KNOCKOUT' || (match.phase && match.phase !== 'GROUP_STAGE')) {
+    const isKnockout = activeBolao ? activeBolao.scoring_mode === 'KNOCKOUT' : match.scoring_mode === 'KNOCKOUT';
+
+    if (isKnockout) {
        groupName = getPhaseName(match.phase);
     } else {
        groupName = match.group && match.group !== '-' ? `Grupo ${match.group}` : 'Fase de Grupos';
