@@ -87,7 +87,7 @@ function App() {
     getUserBetForMatch,
     handleOpenModal,
     handleSaveBet
-  } = useBets(API_URL, accessToken, loggedUser, setShowLoginModal, setLoginError);
+  } = useBets(API_URL, accessToken, loggedUser, setShowLoginModal, setLoginError, activeBolao);
 
   // Modifica as funções de auth para injetar as dependências de bets (por causa de refs cruzadas)
   const onLoginSubmit = (e) => handleLoginSubmit(e, setStatusMessage, fetchUserBets);
@@ -102,7 +102,18 @@ function App() {
       headers: accessToken ? { 'Authorization': `Bearer ${accessToken}` } : {}
     })
       .then(res => res.ok ? res.json() : [])
-      .then(data => setAllBolaos(Array.isArray(data) ? data : data.results || []))
+      .then(data => {
+        const arr = Array.isArray(data) ? data : data.results || [];
+        setAllBolaos(arr);
+        // Atualiza o activeBolao caso seu status tenha mudado no backend
+        setActiveBolao(prev => {
+          if (prev) {
+            const updated = arr.find(b => b.id === prev.id);
+            if (updated && updated.status !== prev.status) return updated;
+          }
+          return prev;
+        });
+      })
       .catch(console.error);
   };
 

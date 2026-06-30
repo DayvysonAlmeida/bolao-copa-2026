@@ -72,7 +72,7 @@ export function MatchCard({ match, userBet, loggedUser, handleOpenModal, betChan
           </div>
           {match.penalty_winner_name && (
             <div className="text-[9px] text-yellow-400 mt-1 uppercase tracking-wider font-bold bg-yellow-400/10 px-2 py-0.5 rounded border border-yellow-400/20">
-              Pênaltis: {match.penalty_winner_name}
+              Pênaltis: {match.home_penalty_score !== null ? `${match.home_penalty_score} x ${match.away_penalty_score} (${match.penalty_winner_name})` : match.penalty_winner_name}
             </div>
           )}
         </div>
@@ -89,11 +89,6 @@ export function MatchCard({ match, userBet, loggedUser, handleOpenModal, betChan
         <div className="mt-4 px-4 py-3 rounded-2xl bg-dark-900 border border-dark-700 text-sm text-gray-300">
           <div className="flex flex-col gap-1">
             <div><span className="font-semibold text-neon-green">Seu palpite:</span> {userBet.home_score} x {userBet.away_score}</div>
-            {userBet.penalty_winner_name && (
-              <div className="text-[11px] text-yellow-400">
-                <span className="font-semibold">Classifica:</span> {userBet.penalty_winner_name}
-              </div>
-            )}
           </div>
           <div className="mt-2 text-[10px] text-gray-500">Prazo para edição: {betChangeDeadlineLabel}</div>
         </div>

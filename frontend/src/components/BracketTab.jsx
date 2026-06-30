@@ -13,14 +13,25 @@ const BracketMatchCard = ({ match, loggedUser, getUserBetForMatch, handleOpenMod
 
   const bet = getUserBetForMatch(match.id);
   
-  // Placar a ser exibido: da API se o jogo estiver rolando/finalizado, senão do palpite
-  const showBetInsteadOfScore = match.status === 'PENDING' && bet;
-  
-  const scoreHome = showBetInsteadOfScore ? bet.home_score : match.home_score;
-  const scoreAway = showBetInsteadOfScore ? bet.away_score : match.away_score;
-  
-  const hasPenalties = match.home_score === match.away_score && match.home_score !== null && match.status !== 'PENDING';
-  const betHasPenalties = bet && bet.home_score === bet.away_score && bet.home_score !== null;
+  const hasRealScore = match.status !== 'PENDING' && match.home_score !== null;
+  const displayHome = hasRealScore ? match.home_score : (bet ? bet.home_score : '-');
+  const displayAway = hasRealScore ? match.away_score : (bet ? bet.away_score : '-');
+  const displayPenHome = hasRealScore ? match.home_penalty_score : null;
+  const displayPenAway = hasRealScore ? match.away_penalty_score : null;
+  const showBetColor = match.status === 'PENDING' && bet;
+
+  const renderScore = (score, pen) => {
+    if (score === null || score === '-') return '-';
+    if (pen !== null && pen !== undefined) {
+      return (
+        <div className="flex items-center gap-1 justify-end">
+          <span>{score}</span>
+          <span className="text-[8px] text-yellow-500 font-normal">({pen})</span>
+        </div>
+      );
+    }
+    return score;
+  };
 
   const formattedDate = new Date(match.match_date).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
   const formattedTime = new Date(match.match_date).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
@@ -44,8 +55,8 @@ const BracketMatchCard = ({ match, loggedUser, getUserBetForMatch, handleOpenMod
             )}
             <span className="truncate font-semibold text-gray-200 text-xs">{formatTeamName(match.home_team_name)}</span>
           </div>
-          <div className={`font-bold w-5 text-center text-xs ${showBetInsteadOfScore ? 'text-neon-green' : 'text-white'}`}>
-            {scoreHome !== null ? scoreHome : '-'}
+          <div className={`font-bold text-xs ${showBetColor ? 'text-neon-green' : 'text-white'}`}>
+            {renderScore(displayHome, displayPenHome)}
           </div>
         </div>
         
@@ -59,27 +70,23 @@ const BracketMatchCard = ({ match, loggedUser, getUserBetForMatch, handleOpenMod
             )}
             <span className="truncate font-semibold text-gray-200 text-xs">{formatTeamName(match.away_team_name)}</span>
           </div>
-          <div className={`font-bold w-5 text-center text-xs ${showBetInsteadOfScore ? 'text-neon-green' : 'text-white'}`}>
-            {scoreAway !== null ? scoreAway : '-'}
+          <div className={`font-bold text-xs ${showBetColor ? 'text-neon-green' : 'text-white'}`}>
+            {renderScore(displayAway, displayPenAway)}
           </div>
         </div>
       </div>
       
       {/* Área de Pênaltis e Status do Palpite */}
       <div className="h-5 bg-dark-900 border-t border-dark-700 flex items-center justify-center text-[9px] font-medium text-gray-400">
-        {match.status === 'FINISHED' ? (
-           hasPenalties ? (
-             <span className="text-yellow-500">Pênaltis: {match.penalty_winner_name} venceu</span>
-           ) : <span className="text-gray-500">Encerrado</span>
-        ) : match.status === 'IN_PROGRESS' ? (
-           <span className="text-neon-green animate-pulse">🔴 Ao Vivo</span>
+        {match.status === 'FINISHED' || match.status === 'IN_PROGRESS' ? (
+           bet ? (
+              <span className="text-neon-green">Palpite: {bet.home_score} x {bet.away_score}</span>
+           ) : (
+              <span className="text-gray-500">{match.status === 'FINISHED' ? 'Encerrado' : <span className="text-red-500 animate-pulse">🔴 Ao Vivo</span>}</span>
+           )
         ) : (
            bet ? (
-             betHasPenalties && bet.penalty_winner_name ? (
-               <span className="text-yellow-500">Seu palpite (Pênaltis: {bet.penalty_winner_name})</span>
-             ) : (
-               <span className="text-neon-green/80">Palpite salvo</span>
-             )
+             <span className="text-neon-green/80">Palpite: {bet.home_score} x {bet.away_score}</span>
            ) : (
              <span className="text-blue-400">Faça seu palpite</span>
            )

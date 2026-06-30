@@ -33,13 +33,12 @@ export function MatchRow({ match, userBet, onClick, showBet = false }) {
         )}
         {match.penalty_winner_name && (
           <span className="text-[8px] text-yellow-400 bg-yellow-400/10 px-1 py-0.5 rounded uppercase font-bold mt-1">
-            Pen: {match.penalty_winner_name}
+            Pen: {match.home_penalty_score !== null ? `${match.home_penalty_score}x${match.away_penalty_score}` : match.penalty_winner_name}
           </span>
         )}
         {showBet && userBet && (
           <span className="text-[9px] text-neon-green/80 mt-0.5 flex flex-col items-center">
             <span>Palpite: {userBet.home_score}×{userBet.away_score}</span>
-            {userBet.penalty_winner_name && <span className="text-[8px] text-yellow-400">Classifica: {userBet.penalty_winner_name}</span>}
           </span>
         )}
       </div>

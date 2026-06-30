@@ -21,6 +21,10 @@ class BetViewSet(viewsets.ModelViewSet):
     
     def perform_create(self, serializer):
         user = self.request.user
+        match = serializer.validated_data.get('match')
+        
+        if match and match.bolao and match.bolao.status == 'LOCKED' and not user.is_staff:
+            raise ValidationError("Este bolão está em auditoria (bloqueado). Não é possível enviar novos palpites.")
         
         if user.is_staff:
             # O admin pode mandar o usuário no JSON. Se não mandar, usa ele mesmo.
@@ -32,6 +36,10 @@ class BetViewSet(viewsets.ModelViewSet):
     def perform_update(self, serializer):
         user = self.request.user
         bet = self.get_object()
+        match = bet.match
+        
+        if match and match.bolao and match.bolao.status == 'LOCKED' and not user.is_staff:
+            raise ValidationError("Este bolão está em auditoria (bloqueado). Não é possível alterar palpites.")
         
         # Se for um usuário normal tentando editar o palpite de outra pessoa
         if not user.is_staff and bet.user != user:

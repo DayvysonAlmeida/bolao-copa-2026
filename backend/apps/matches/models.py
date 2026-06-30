@@ -9,7 +9,7 @@ class Bolao(models.Model):
     Cada bolão tem seu próprio ranking, partidas e regras de pontuação."""
     SCORING_CHOICES = (
         ('STANDARD', 'Padrão (5/3/0)'),
-        ('KNOCKOUT', 'Mata-Mata (8/5/3/0 com pênaltis)'),
+        ('KNOCKOUT', 'Mata-Mata (5/3/0 sem pênaltis)'),
     )
     STATUS_CHOICES = (
         ('OPEN', 'Aberto para palpites'),
@@ -59,6 +59,8 @@ class Match(models.Model):
     bolao = models.ForeignKey(Bolao, on_delete=models.SET_NULL, null=True, blank=True, related_name='matches', verbose_name="Bolão")
     phase = models.CharField(max_length=30, blank=True, default='', verbose_name="Fase", help_text="Ex: GROUP_STAGE, ROUND_16, QUARTER_FINALS...")
     match_number = models.IntegerField(null=True, blank=True, verbose_name="Número do Jogo (FIFA)", help_text="Ex: 73, 74, 75...")
+    home_penalty_score = models.IntegerField(null=True, blank=True, verbose_name="Gols Casa (Pênaltis)")
+    away_penalty_score = models.IntegerField(null=True, blank=True, verbose_name="Gols Fora (Pênaltis)")
     penalty_winner = models.ForeignKey(Team, on_delete=models.SET_NULL, null=True, blank=True, related_name='penalty_wins', verbose_name="Classificado nos Pênaltis")
 
     # ── Campos originais (INTOCADOS) ─────────────────────────────────────────

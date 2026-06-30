@@ -124,8 +124,21 @@ class Command(BaseCommand):
 
             score = m.get("score", {})
             full_time = score.get("fullTime", {})
-            home_score = full_time.get("home") if full_time else None
-            away_score = full_time.get("away") if full_time else None
+            duration = score.get("duration", "REGULAR")
+
+            if duration == "PENALTY_SHOOTOUT":
+                # Evita pegar o placar de pênaltis que algumas APIs enviam no fullTime
+                reg_time = score.get("regularTime", {})
+                ext_time = score.get("extraTime", {})
+                if reg_time and ext_time and reg_time.get("home") is not None and ext_time.get("home") is not None:
+                    home_score = reg_time.get("home", 0) + ext_time.get("home", 0)
+                    away_score = reg_time.get("away", 0) + ext_time.get("away", 0)
+                else:
+                    home_score = reg_time.get("home") if reg_time else full_time.get("home")
+                    away_score = reg_time.get("away") if reg_time else full_time.get("away")
+            else:
+                home_score = full_time.get("home") if full_time else None
+                away_score = full_time.get("away") if full_time else None
 
             # NOVO: Extrair vencedor dos pênaltis (se aplicável)
             penalties = score.get("penalties", {})
@@ -169,14 +182,17 @@ class Command(BaseCommand):
                         match_obj.phase = phase
 
                     # NOVO: Atualizar penalty_winner se houve pênaltis
-                    if pen_home is not None and pen_away is not None and pen_home != pen_away:
-                        try:
-                            if pen_home > pen_away:
-                                match_obj.penalty_winner = match_obj.home_team
-                            else:
-                                match_obj.penalty_winner = match_obj.away_team
-                        except Exception:
-                            pass  # Não quebra o sync se der erro
+                    if pen_home is not None and pen_away is not None:
+                        match_obj.home_penalty_score = pen_home
+                        match_obj.away_penalty_score = pen_away
+                        if pen_home != pen_away:
+                            try:
+                                if pen_home > pen_away:
+                                    match_obj.penalty_winner = match_obj.home_team
+                                else:
+                                    match_obj.penalty_winner = match_obj.away_team
+                            except Exception:
+                                pass  # Não quebra o sync se der erro
                     
                     horario_atualizado = False
                     if api_match_date and match_obj.match_date != api_match_date:

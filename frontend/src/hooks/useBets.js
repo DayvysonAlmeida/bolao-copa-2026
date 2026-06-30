@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 
-export function useBets(API_URL, accessToken, loggedUser, setShowLoginModal, setLoginError) {
+export function useBets(API_URL, accessToken, loggedUser, setShowLoginModal, setLoginError, activeBolao) {
   const [userBets, setUserBets] = useState([]);
   const [editingBetId, setEditingBetId] = useState(null);
   const [selectedMatch, setSelectedMatch] = useState(null);
@@ -9,8 +9,9 @@ export function useBets(API_URL, accessToken, loggedUser, setShowLoginModal, set
   const [penaltyWinner, setPenaltyWinner] = useState('');
   const [statusMessage, setStatusMessage] = useState({ type: '', text: '' });
 
-  const isBeforeBetChangeDeadline = selectedMatch ? new Date() <= new Date(selectedMatch.match_date) : false;
-  const betChangeDeadlineLabel = 'o início da partida';
+  const isLocked = activeBolao?.status === 'LOCKED' && !loggedUser?.is_staff;
+  const isBeforeBetChangeDeadline = selectedMatch ? (new Date() <= new Date(selectedMatch.match_date) && !isLocked) : false;
+  const betChangeDeadlineLabel = isLocked ? 'bloqueado (Bolão em Auditoria)' : 'o início da partida';
 
   const fetchUserBets = async (token) => {
     try {
